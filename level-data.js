@@ -2,13 +2,12 @@
 // scores: desired score for each successive attempt at that level
 // (first element = first try; if you fail, the next element becomes
 // the new target; the last element repeats if you keep failing it).
+// A level can omit any field (or be skipped entirely) to inherit it from
+// the nearest lower level that specifies it. The lowest level in the
+// table has nothing to inherit from, so it must specify scores,
+// avSingles, and avDoubles explicitly.
 var LEVEL_DATA = {
   "10": { "scores": [996, 992, 988, 984, 980],  "avSingles": 651, "avDoubles": 631 },
-  "11": {},
-  "12": {},
-  "13": {},
-  "14": {},
-  "15": {},
 
   "16": { "scores": [995, 990, 985, 980, 975],  "avSingles": 656, "avDoubles": 636,  },
   "17": { "scores": [994, 989, 984, 979, 974] },

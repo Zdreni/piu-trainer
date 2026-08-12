@@ -1,6 +1,8 @@
 (function(){
   "use strict";
 
+  // Merges each explicitly-listed level's config forward onto the next
+  // (so a level entry only needs to specify what changed since the one below it).
   function fillGaps(raw){
     var result = {};
     var prev = null;
@@ -22,11 +24,14 @@
     if (keys.length === 0){
       return { valid: false, error: "Data is empty — add at least one level." };
     }
+    var minKey = null;
     for (var i = 0; i < keys.length; i++){
       var key = keys[i];
       if (!/^\d+$/.test(key)){
         return { valid: false, error: "Level key \"" + key + "\" must be a whole number." };
       }
+      if (minKey === null || Number(key) < Number(minKey)) minKey = key;
+
       var entry = data[key];
       if (entry === null || typeof entry !== "object" || Array.isArray(entry)){
         return { valid: false, error: "Level " + key + " must map to an object (use {} for an empty entry)." };
@@ -47,6 +52,19 @@
         return { valid: false, error: "Level " + key + ": \"avDoubles\" must be a number." };
       }
     }
+
+    // The lowest level has nothing below it to inherit from, so it must be fully specified.
+    var lowest = data[minKey];
+    if (!Array.isArray(lowest.scores) || lowest.scores.length === 0){
+      return { valid: false, error: "Level " + minKey + " is the lowest level in the table and must specify \"scores\" — there's nothing below it to inherit from." };
+    }
+    if (typeof lowest.avSingles !== "number" || !Number.isFinite(lowest.avSingles)){
+      return { valid: false, error: "Level " + minKey + " is the lowest level in the table and must specify \"avSingles\" — there's nothing below it to inherit from." };
+    }
+    if (typeof lowest.avDoubles !== "number" || !Number.isFinite(lowest.avDoubles)){
+      return { valid: false, error: "Level " + minKey + " is the lowest level in the table and must specify \"avDoubles\" — there's nothing below it to inherit from." };
+    }
+
     return { valid: true };
   }
 
@@ -61,8 +79,17 @@
     }
   }
 
-  var activeRawData = readStoredRawData() || LEVEL_DATA;
-  var levelData = fillGaps(activeRawData);
+  var activeRawData = null;
+  var levelData = null;
+  var levelKeys = null; // ascending numeric level keys present in levelData
+
+  function setActiveData(raw){
+    activeRawData = raw;
+    levelData = fillGaps(raw);
+    levelKeys = Object.keys(levelData).map(Number).sort(function(a, b){ return a - b; });
+  }
+
+  setActiveData(readStoredRawData() || LEVEL_DATA);
 
   var state = { level: null, attemptIndex: 0, avSinglesChanged: true, avDoublesChanged: true };
   var lastLevelText = null;
@@ -112,8 +139,15 @@
   var saveDataBtn = document.getElementById("saveDataBtn");
 
   // ---- helpers ----
+  // A level with no explicit table entry inherits from the nearest lower level that has one.
   function getConfig(level){
-    return levelData[String(level)];
+    var target = Number(level);
+    var resolvedKey = null;
+    for (var i = 0; i < levelKeys.length; i++){
+      if (levelKeys[i] > target) break;
+      resolvedKey = levelKeys[i];
+    }
+    return resolvedKey === null ? undefined : levelData[String(resolvedKey)];
   }
 
   function formatScore(n){
@@ -382,8 +416,7 @@
       return;
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-    activeRawData = parsed;
-    levelData = fillGaps(activeRawData);
+    setActiveData(parsed);
     closeDataModal();
     if (state.level !== null) render();
   });
