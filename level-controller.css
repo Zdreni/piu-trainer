@@ -423,6 +423,107 @@ body{
   font-weight:700;
 }
 
+.io-row{
+  display:flex;
+  gap:0.6rem;
+}
+.setup .io-btn{
+  flex:1;
+  font-family:var(--font-display);
+  font-weight:700;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  font-size:0.68rem;
+  padding:0.55rem 0.9rem;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--bg-panel);
+  color:var(--text-mid);
+  box-shadow:none;
+  cursor:pointer;
+}
+.setup .io-btn:active{transform:scale(0.96);}
+
+/* ---------- data import / view-edit modal ---------- */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  z-index:20;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(4,5,9,0.72);
+  backdrop-filter:blur(4px);
+  padding:1.2rem;
+}
+.modal{
+  width:100%;
+  max-width:480px;
+  max-height:88vh;
+  display:flex;
+  flex-direction:column;
+  gap:0.75rem;
+  background:var(--bg-panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:1.2rem;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.modal h2{
+  margin:0;
+  font-size:0.85rem;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--text-hi);
+}
+.data-textarea{
+  flex:1;
+  min-height:280px;
+  resize:vertical;
+  font-family:var(--font-mono);
+  font-size:0.82rem;
+  line-height:1.5;
+  color:var(--text-hi);
+  background:var(--bg-panel-2);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:0.75rem;
+  white-space:pre;
+}
+.data-textarea:focus{
+  outline:2px solid var(--cyan);
+  outline-offset:1px;
+}
+.modal .error{
+  margin:0;
+}
+.modal-actions{
+  display:flex;
+  gap:0.5rem;
+}
+.modal-btn{
+  flex:1;
+  font-family:var(--font-display);
+  font-weight:800;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  font-size:0.78rem;
+  padding:0.7rem 0.5rem;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+.modal-btn:active{transform:scale(0.96);}
+.modal-btn.ghost{
+  background:var(--bg-panel-2);
+  color:var(--text-mid);
+  border:1px solid var(--line);
+}
+.modal-btn.primary{
+  background:linear-gradient(180deg, #6be3ff, var(--cyan));
+  color:var(--bg-void);
+}
+
 /* ---------- no-data banner ---------- */
 .no-data{
   position:relative;

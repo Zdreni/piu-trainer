@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Level Controller</title>
-<link rel="stylesheet" href="level-controller.css?v=2">
+<link rel="stylesheet" href="level-controller.css?v=3">
 </head>
 <body>
 
@@ -24,7 +24,11 @@
       </div>
       <button id="startBtn">Go</button>
       <p class="error" id="setupError" hidden>Enter a valid level number.</p>
-      <p class="hint">Level data lives in <code>level-data.js</code> &mdash; edit it directly to add or change levels.</p>
+      <div class="io-row">
+        <button type="button" class="io-btn" id="importBtn">Import JSON</button>
+        <button type="button" class="io-btn" id="viewDataBtn">View / Edit Data</button>
+      </div>
+      <p class="hint">Level data lives in <code>level-data.js</code> &mdash; edit it directly, or import/edit JSON above (saved to this browser and takes priority over the file).</p>
     </section>
 
     <!-- PLAY SCREEN -->
@@ -83,6 +87,20 @@
       </div>
     </section>
 
+    <!-- DATA IMPORT / VIEW-EDIT MODAL -->
+    <div class="modal-overlay" id="dataModal" hidden>
+      <div class="modal">
+        <h2 id="dataModalTitle">Import Level Data</h2>
+        <textarea class="data-textarea" id="dataTextarea" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+        <p class="error" id="dataModalError" hidden></p>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn ghost" id="copyDataBtn">Copy</button>
+          <button type="button" class="modal-btn ghost" id="cancelDataBtn">Cancel</button>
+          <button type="button" class="modal-btn primary" id="saveDataBtn">Save</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="level-data.js"></script>
@@ -102,7 +120,57 @@
       return result;
     }
 
-    var levelData = fillGaps(LEVEL_DATA);
+    var STORAGE_KEY = "piuTrainerLevelData";
+
+    function validateLevelData(data){
+      if (data === null || typeof data !== "object" || Array.isArray(data)){
+        return { valid: false, error: "Top-level JSON must be an object mapping level numbers to level configs." };
+      }
+      var keys = Object.keys(data);
+      if (keys.length === 0){
+        return { valid: false, error: "Data is empty — add at least one level." };
+      }
+      for (var i = 0; i < keys.length; i++){
+        var key = keys[i];
+        if (!/^\d+$/.test(key)){
+          return { valid: false, error: "Level key \"" + key + "\" must be a whole number." };
+        }
+        var entry = data[key];
+        if (entry === null || typeof entry !== "object" || Array.isArray(entry)){
+          return { valid: false, error: "Level " + key + " must map to an object (use {} for an empty entry)." };
+        }
+        if ("scores" in entry){
+          var scores = entry.scores;
+          var scoresOk = Array.isArray(scores) && scores.length > 0 && scores.every(function(n){
+            return typeof n === "number" && Number.isFinite(n);
+          });
+          if (!scoresOk){
+            return { valid: false, error: "Level " + key + ": \"scores\" must be a non-empty array of numbers." };
+          }
+        }
+        if ("avSingles" in entry && entry.avSingles !== undefined && (typeof entry.avSingles !== "number" || !Number.isFinite(entry.avSingles))){
+          return { valid: false, error: "Level " + key + ": \"avSingles\" must be a number." };
+        }
+        if ("avDoubles" in entry && entry.avDoubles !== undefined && (typeof entry.avDoubles !== "number" || !Number.isFinite(entry.avDoubles))){
+          return { valid: false, error: "Level " + key + ": \"avDoubles\" must be a number." };
+        }
+      }
+      return { valid: true };
+    }
+
+    function readStoredRawData(){
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        var parsed = JSON.parse(raw);
+        return validateLevelData(parsed).valid ? parsed : null;
+      } catch (e){
+        return null;
+      }
+    }
+
+    var activeRawData = readStoredRawData() || LEVEL_DATA;
+    var levelData = fillGaps(activeRawData);
 
     var state = { level: null, attemptIndex: 0, avSinglesChanged: true, avDoublesChanged: true };
     var lastLevelText = null;
@@ -140,6 +208,16 @@
     var jumpBtn = document.getElementById("jumpBtn");
 
     var fullscreenBtn = document.getElementById("fullscreenBtn");
+
+    var importBtn = document.getElementById("importBtn");
+    var viewDataBtn = document.getElementById("viewDataBtn");
+    var dataModal = document.getElementById("dataModal");
+    var dataModalTitle = document.getElementById("dataModalTitle");
+    var dataTextarea = document.getElementById("dataTextarea");
+    var dataModalError = document.getElementById("dataModalError");
+    var copyDataBtn = document.getElementById("copyDataBtn");
+    var cancelDataBtn = document.getElementById("cancelDataBtn");
+    var saveDataBtn = document.getElementById("saveDataBtn");
 
     // ---- helpers ----
     function getConfig(level){
@@ -345,6 +423,77 @@
     });
     jumpInput.addEventListener("keydown", function(e){
       if (e.key === "Enter") jumpBtn.click();
+    });
+
+    // ---- data import / view-edit modal ----
+    function openDataModal(mode){
+      dataModalError.hidden = true;
+      dataModalError.textContent = "";
+      if (mode === "import"){
+        dataModalTitle.textContent = "Import Level Data";
+        dataTextarea.value = "";
+        dataTextarea.placeholder = "Paste level data JSON here…";
+      } else {
+        dataModalTitle.textContent = "Level Data (Local Storage)";
+        dataTextarea.value = JSON.stringify(activeRawData, null, 2);
+      }
+      dataModal.hidden = false;
+      dataTextarea.focus();
+    }
+
+    function closeDataModal(){
+      dataModal.hidden = true;
+    }
+
+    importBtn.addEventListener("click", function(){ openDataModal("import"); });
+    viewDataBtn.addEventListener("click", function(){ openDataModal("view"); });
+    cancelDataBtn.addEventListener("click", closeDataModal);
+
+    dataModal.addEventListener("click", function(e){
+      if (e.target === dataModal) closeDataModal();
+    });
+
+    document.addEventListener("keydown", function(e){
+      if (e.key === "Escape" && !dataModal.hidden) closeDataModal();
+    });
+
+    copyDataBtn.addEventListener("click", function(){
+      var text = dataTextarea.value;
+      function fallbackCopy(){
+        dataTextarea.focus();
+        dataTextarea.select();
+        try { document.execCommand("copy"); } catch (e){}
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
+      var original = copyDataBtn.textContent;
+      copyDataBtn.textContent = "Copied!";
+      setTimeout(function(){ copyDataBtn.textContent = original; }, 1200);
+    });
+
+    saveDataBtn.addEventListener("click", function(){
+      var parsed;
+      try {
+        parsed = JSON.parse(dataTextarea.value);
+      } catch (e){
+        dataModalError.textContent = "Invalid JSON: " + e.message;
+        dataModalError.hidden = false;
+        return;
+      }
+      var check = validateLevelData(parsed);
+      if (!check.valid){
+        dataModalError.textContent = check.error;
+        dataModalError.hidden = false;
+        return;
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      activeRawData = parsed;
+      levelData = fillGaps(activeRawData);
+      closeDataModal();
+      if (state.level !== null) render();
     });
 
     function isFullscreen(){
