@@ -286,6 +286,7 @@
 
   function buildLadder(scores, attemptIndex){
     ladderEl.innerHTML = "";
+    var currentStepEl = null;
     scores.forEach(function(score, i){
       var step = document.createElement("div");
       var cls = "ladder-step ";
@@ -305,9 +306,11 @@
         tag.textContent = "FAIL";
         step.appendChild(tag);
       }
+      if (i === attemptIndex) currentStepEl = step;
       ladderEl.appendChild(step);
     });
     attemptTagEl.textContent = (attemptIndex + 1) + "/" + scores.length;
+    if (currentStepEl) currentStepEl.scrollIntoView({ block: "nearest", inline: "center" });
   }
 
   function render(){
