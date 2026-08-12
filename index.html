@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Level Controller</title>
+<title>Pump It Up trainer</title>
 <link rel="stylesheet" href="level-controller.css?v=3">
 </head>
 <body>
@@ -17,7 +17,7 @@
 
     <!-- SETUP SCREEN -->
     <section class="setup" id="setup">
-      <h1>Level <span>Controller</span></h1>
+      <h1>Pump It Up <span>trainer</span></h1>
       <div class="field">
         <label for="startLevelInput">Start at level</label>
         <input type="number" id="startLevelInput" value="14" min="1" inputmode="numeric">
@@ -28,7 +28,6 @@
         <button type="button" class="io-btn" id="importBtn">Import JSON</button>
         <button type="button" class="io-btn" id="viewDataBtn">View / Edit Data</button>
       </div>
-      <p class="hint">Level data lives in <code>level-data.js</code> &mdash; edit it directly, or import/edit JSON above (saved to this browser and takes priority over the file).</p>
     </section>
 
     <!-- PLAY SCREEN -->
@@ -57,12 +56,12 @@
       <div class="attempts-spacer"></div>
 
       <div class="ladder-wrap">
-        <div class="eyebrow">Attempts <span class="tag" id="attemptTag">1/1</span></div>
+        <div class="eyebrow">Level Chart Attempts <span class="tag" id="attemptTag">1/1</span></div>
         <div class="ladder" id="ladder"></div>
       </div>
 
       <div class="target-block">
-        <div class="eyebrow">Target Score</div>
+        <div class="eyebrow">Chart Target Score</div>
         <div class="number-wrap">
           <div class="burst cyan" id="targetBurst"></div>
           <div class="target-number" id="targetNumber" aria-live="polite">--</div>
@@ -70,8 +69,8 @@
       </div>
 
       <div class="actions">
-        <button class="btn btn-fail" id="failBtn">I Failed</button>
-        <button class="btn btn-pass" id="passBtn">I Succeeded</button>
+        <button class="btn btn-fail" id="failBtn">Score Missed</button>
+        <button class="btn btn-pass" id="passBtn">Score Achieved</button>
       </div>
     </section>
 
