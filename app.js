@@ -154,14 +154,71 @@
     return Number(n).toLocaleString("en-US");
   }
 
+  function burstGlow(burstEl){
+    burstEl.classList.remove("active");
+    void burstEl.offsetWidth; // reflow to restart animation
+    burstEl.classList.add("active");
+  }
+
   function splash(numberEl, burstEl){
     numberEl.classList.remove("splash-pop");
     void numberEl.offsetWidth; // reflow to restart animation
     numberEl.classList.add("splash-pop");
+    burstGlow(burstEl);
+  }
 
-    burstEl.classList.remove("active");
-    void burstEl.offsetWidth;
-    burstEl.classList.add("active");
+  // Slides the old value out downward and the new value in from above, like a wheel/odometer digit.
+  function wheelText(el, text, baseClass){
+    if (el.classList.contains("wheel-active")){
+      window.clearTimeout(el._wheelTimer);
+      el.textContent = el.dataset.wheelValue || text;
+      el.className = baseClass;
+      el.style.width = "";
+      el.style.height = "";
+    }
+
+    var currentText = el.textContent;
+    if (currentText === text) return;
+
+    var oldWidth = el.offsetWidth;
+    el.textContent = text;
+    var newWidth = el.offsetWidth;
+    el.textContent = currentText;
+    var width = Math.max(oldWidth, newWidth);
+    var height = el.offsetHeight;
+
+    var oldSpan = document.createElement("span");
+    oldSpan.className = baseClass + " wheel-num";
+    oldSpan.textContent = currentText;
+
+    var newSpan = document.createElement("span");
+    newSpan.className = baseClass + " wheel-num";
+    newSpan.textContent = text;
+
+    el.textContent = "";
+    el.appendChild(oldSpan);
+    el.appendChild(newSpan);
+    el.style.width = width + "px";
+    el.style.height = height + "px";
+    el.className = "wheel-active";
+    el.dataset.wheelValue = text;
+
+    oldSpan.style.transform = "translateY(0%)";
+    newSpan.style.transform = "translateY(-100%)";
+
+    void el.offsetWidth; // reflow before animating to final positions
+
+    requestAnimationFrame(function(){
+      oldSpan.style.transform = "translateY(100%)";
+      newSpan.style.transform = "translateY(0%)";
+    });
+
+    el._wheelTimer = window.setTimeout(function(){
+      el.textContent = text;
+      el.className = baseClass;
+      el.style.width = "";
+      el.style.height = "";
+    }, 480);
   }
 
   function updateAvValue(el, value, changed, previousValue){
@@ -270,7 +327,6 @@
     var newTargetText = formatScore(target);
     var targetChanged = lastTargetText !== null && newTargetText !== lastTargetText;
 
-    levelNumberEl.textContent = newLevelText;
     lastAvSinglesValue = updateAvValue(avSinglesEl, config.avSingles, state.avSinglesChanged, lastAvSinglesValue);
     lastAvDoublesValue = updateAvValue(avDoublesEl, config.avDoubles, state.avDoublesChanged, lastAvDoublesValue);
     avSinglesEl.classList.toggle("is-unchanged", !state.avSinglesChanged);
@@ -285,7 +341,12 @@
 
     showScreen("play");
 
-    if (levelChanged) splash(levelNumberEl, levelBurstEl);
+    if (levelChanged){
+      wheelText(levelNumberEl, newLevelText, "level-number");
+      burstGlow(levelBurstEl);
+    } else {
+      levelNumberEl.textContent = newLevelText;
+    }
     if (targetChanged || levelChanged) splash(targetNumberEl, targetBurstEl);
 
     lastLevelText = newLevelText;
