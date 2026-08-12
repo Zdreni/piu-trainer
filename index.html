@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Level Controller</title>
+<link rel="stylesheet" href="level-controller.css?v=2">
+</head>
+<body>
+
+  <div class="lanes"></div>
+  <div class="vignette"></div>
+
+  <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle fullscreen" aria-label="Toggle fullscreen">&#9974;</button>
+
+  <div id="app">
+
+    <!-- SETUP SCREEN -->
+    <section class="setup" id="setup">
+      <h1>Level <span>Controller</span></h1>
+      <div class="field">
+        <label for="startLevelInput">Start at level</label>
+        <input type="number" id="startLevelInput" value="14" min="1" inputmode="numeric">
+      </div>
+      <button id="startBtn">Go</button>
+      <p class="error" id="setupError" hidden>Enter a valid level number.</p>
+      <p class="hint">Level data lives in <code>level-data.js</code> &mdash; edit it directly to add or change levels.</p>
+    </section>
+
+    <!-- PLAY SCREEN -->
+    <section class="play" id="play" hidden>
+      <button class="restart-btn" id="restartBtn" title="Change level" aria-label="Change level">&#8634;</button>
+
+      <div class="level-block">
+        <div class="eyebrow">Level</div>
+        <div class="number-wrap">
+          <div class="burst pink" id="levelBurst"></div>
+          <div class="level-number" id="levelNumber" aria-live="polite">--</div>
+        </div>
+      </div>
+
+      <div class="mods-row">
+        <div class="mod-card">
+          <span class="mod-label">AV &middot; Singles</span>
+          <span class="mod-value" id="avSingles">&mdash;</span>
+        </div>
+        <div class="mod-card">
+          <span class="mod-label">AV &middot; Doubles</span>
+          <span class="mod-value" id="avDoubles">&mdash;</span>
+        </div>
+      </div>
+
+      <div class="attempts-spacer"></div>
+
+      <div class="ladder-wrap">
+        <div class="eyebrow">Attempts <span class="tag" id="attemptTag">1/1</span></div>
+        <div class="ladder" id="ladder"></div>
+      </div>
+
+      <div class="target-block">
+        <div class="eyebrow">Target Score</div>
+        <div class="number-wrap">
+          <div class="burst cyan" id="targetBurst"></div>
+          <div class="target-number" id="targetNumber" aria-live="polite">--</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-fail" id="failBtn">I Failed</button>
+        <button class="btn btn-pass" id="passBtn">I Succeeded</button>
+      </div>
+    </section>
+
+    <!-- NO DATA SCREEN -->
+    <section class="no-data" id="noData" hidden>
+      <button class="restart-btn" id="restartBtnNoData" title="Change level" aria-label="Change level">&#8634;</button>
+      <div class="eyebrow">Level</div>
+      <div class="level-number no-data-level" id="noDataLevel">--</div>
+      <p>No table entry for this level yet. Add it to <code>level-data.js</code>, or jump to a different level below.</p>
+      <div class="jump-row">
+        <input type="number" id="jumpInput" inputmode="numeric">
+        <button id="jumpBtn">Jump</button>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="level-data.js"></script>
+
+  <script>
+  (function(){
+    "use strict";
+
+    function fillGaps(raw){
+      var result = {};
+      var prev = null;
+      Object.keys(raw).sort(function(a, b){ return Number(a) - Number(b); }).forEach(function(key){
+        var merged = Object.assign({}, prev, raw[key]);
+        result[key] = merged;
+        prev = merged;
+      });
+      return result;
+    }
+
+    var levelData = fillGaps(LEVEL_DATA);
+
+    var state = { level: null, attemptIndex: 0, avSinglesChanged: true, avDoublesChanged: true };
+    var lastLevelText = null;
+    var lastTargetText = null;
+    var lastTargetValue = null;
+    var lastAvSinglesValue = null;
+    var lastAvDoublesValue = null;
+    var countTokens = new WeakMap();
+
+    // ---- DOM refs ----
+    var setupEl = document.getElementById("setup");
+    var playEl = document.getElementById("play");
+    var noDataEl = document.getElementById("noData");
+
+    var startLevelInput = document.getElementById("startLevelInput");
+    var startBtn = document.getElementById("startBtn");
+    var setupError = document.getElementById("setupError");
+
+    var levelNumberEl = document.getElementById("levelNumber");
+    var levelBurstEl = document.getElementById("levelBurst");
+    var avSinglesEl = document.getElementById("avSingles");
+    var avDoublesEl = document.getElementById("avDoubles");
+    var ladderEl = document.getElementById("ladder");
+    var attemptTagEl = document.getElementById("attemptTag");
+    var targetNumberEl = document.getElementById("targetNumber");
+    var targetBurstEl = document.getElementById("targetBurst");
+
+    var failBtn = document.getElementById("failBtn");
+    var passBtn = document.getElementById("passBtn");
+    var restartBtn = document.getElementById("restartBtn");
+    var restartBtnNoData = document.getElementById("restartBtnNoData");
+
+    var noDataLevelEl = document.getElementById("noDataLevel");
+    var jumpInput = document.getElementById("jumpInput");
+    var jumpBtn = document.getElementById("jumpBtn");
+
+    var fullscreenBtn = document.getElementById("fullscreenBtn");
+
+    // ---- helpers ----
+    function getConfig(level){
+      return levelData[String(level)];
+    }
+
+    function formatScore(n){
+      return Number(n).toLocaleString("en-US");
+    }
+
+    function splash(numberEl, burstEl){
+      numberEl.classList.remove("splash-pop");
+      void numberEl.offsetWidth; // reflow to restart animation
+      numberEl.classList.add("splash-pop");
+
+      burstEl.classList.remove("active");
+      void burstEl.offsetWidth;
+      burstEl.classList.add("active");
+    }
+
+    function updateAvValue(el, value, changed, previousValue){
+      if (value === undefined){
+        el.textContent = "—";
+        return null;
+      }
+      if (changed && previousValue !== null){
+        animateCount(el, previousValue, value, 600);
+      } else {
+        el.textContent = formatScore(value);
+      }
+      return value;
+    }
+
+    function animateCount(el, from, to, duration){
+      var myId = (countTokens.get(el) || 0) + 1;
+      countTokens.set(el, myId);
+      from = Number(from);
+      to = Number(to);
+
+      if (!Number.isFinite(from) || from === to){
+        el.textContent = formatScore(to);
+        return;
+      }
+
+      var startTime = null;
+      function step(timestamp){
+        if (countTokens.get(el) !== myId) return;
+        if (startTime === null) startTime = timestamp;
+        var progress = Math.min((timestamp - startTime) / duration, 1);
+        var eased = 1 - Math.pow(1 - progress, 3);
+        var current = Math.round(from + (to - from) * eased);
+        el.textContent = formatScore(current);
+        if (progress < 1){
+          requestAnimationFrame(step);
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    function pulse(el){
+      el.classList.remove("av-pulse");
+      void el.offsetWidth; // reflow to restart animation
+      el.classList.add("av-pulse");
+      el.addEventListener("animationend", function handler(){
+        el.classList.remove("av-pulse");
+        el.removeEventListener("animationend", handler);
+      });
+    }
+
+    function showScreen(name){
+      setupEl.hidden = name !== "setup";
+      playEl.hidden = name !== "play";
+      noDataEl.hidden = name !== "noData";
+    }
+
+    function buildLadder(scores, attemptIndex){
+      ladderEl.innerHTML = "";
+      scores.forEach(function(score, i){
+        var step = document.createElement("div");
+        var cls = "ladder-step ";
+        if (i < attemptIndex) cls += "past-fail";
+        else if (i === attemptIndex) cls += "current";
+        else cls += "future";
+        step.className = cls;
+
+        var scoreSpan = document.createElement("span");
+        scoreSpan.className = "score-value";
+        scoreSpan.textContent = formatScore(score);
+        step.appendChild(scoreSpan);
+
+        if (i < attemptIndex){
+          var tag = document.createElement("span");
+          tag.className = "fail-tag";
+          tag.textContent = "FAIL";
+          step.appendChild(tag);
+        }
+        ladderEl.appendChild(step);
+      });
+      attemptTagEl.textContent = (attemptIndex + 1) + "/" + scores.length;
+    }
+
+    function render(){
+      var config = getConfig(state.level);
+
+      var newLevelText = String(state.level);
+      var levelChanged = lastLevelText !== null && newLevelText !== lastLevelText;
+
+      if (!config){
+        levelNumberEl.textContent = newLevelText;
+        noDataLevelEl.textContent = newLevelText;
+        jumpInput.value = state.level;
+        showScreen("noData");
+        lastLevelText = newLevelText;
+        lastTargetText = null;
+        lastTargetValue = null;
+        return;
+      }
+
+      var scores = config.scores || [];
+      if (state.attemptIndex > scores.length - 1) state.attemptIndex = scores.length - 1;
+      if (state.attemptIndex < 0) state.attemptIndex = 0;
+
+      var target = scores[state.attemptIndex];
+      var newTargetText = formatScore(target);
+      var targetChanged = lastTargetText !== null && newTargetText !== lastTargetText;
+
+      levelNumberEl.textContent = newLevelText;
+      lastAvSinglesValue = updateAvValue(avSinglesEl, config.avSingles, state.avSinglesChanged, lastAvSinglesValue);
+      lastAvDoublesValue = updateAvValue(avDoublesEl, config.avDoubles, state.avDoublesChanged, lastAvDoublesValue);
+      avSinglesEl.classList.toggle("is-unchanged", !state.avSinglesChanged);
+      avDoublesEl.classList.toggle("is-unchanged", !state.avDoublesChanged);
+      buildLadder(scores, state.attemptIndex);
+
+      if (targetChanged || levelChanged){
+        animateCount(targetNumberEl, lastTargetValue !== null ? lastTargetValue : target, target, 600);
+      } else {
+        targetNumberEl.textContent = newTargetText;
+      }
+
+      showScreen("play");
+
+      if (levelChanged) splash(levelNumberEl, levelBurstEl);
+      if (targetChanged || levelChanged) splash(targetNumberEl, targetBurstEl);
+
+      lastLevelText = newLevelText;
+      lastTargetText = newTargetText;
+      lastTargetValue = target;
+    }
+
+    function startAt(level){
+      var prevConfig = state.level !== null ? getConfig(state.level) : null;
+      var nextConfig = getConfig(level);
+
+      state.avSinglesChanged = !nextConfig || !prevConfig || prevConfig.avSingles !== nextConfig.avSingles;
+      state.avDoublesChanged = !nextConfig || !prevConfig || prevConfig.avDoubles !== nextConfig.avDoubles;
+
+      state.level = level;
+      state.attemptIndex = 0;
+      render();
+
+      if (nextConfig && state.avSinglesChanged) pulse(avSinglesEl);
+      if (nextConfig && state.avDoublesChanged) pulse(avDoublesEl);
+    }
+
+    // ---- events ----
+    startBtn.addEventListener("click", function(){
+      var val = parseInt(startLevelInput.value, 10);
+      if (!Number.isFinite(val) || val < 1){
+        setupError.hidden = false;
+        return;
+      }
+      setupError.hidden = true;
+      startAt(val);
+    });
+
+    startLevelInput.addEventListener("keydown", function(e){
+      if (e.key === "Enter") startBtn.click();
+    });
+
+    passBtn.addEventListener("click", function(){
+      startAt(state.level + 1);
+    });
+
+    failBtn.addEventListener("click", function(){
+      var config = getConfig(state.level);
+      if (!config) return;
+      var scores = config.scores || [];
+      if (state.attemptIndex < scores.length - 1) state.attemptIndex += 1;
+      render();
+    });
+
+    function backToSetup(){
+      startLevelInput.value = state.level !== null ? state.level : 14;
+      showScreen("setup");
+    }
+    restartBtn.addEventListener("click", backToSetup);
+    restartBtnNoData.addEventListener("click", backToSetup);
+
+    jumpBtn.addEventListener("click", function(){
+      var val = parseInt(jumpInput.value, 10);
+      if (!Number.isFinite(val) || val < 1) return;
+      startAt(val);
+    });
+    jumpInput.addEventListener("keydown", function(e){
+      if (e.key === "Enter") jumpBtn.click();
+    });
+
+    function isFullscreen(){
+      return !!(document.fullscreenElement || document.webkitFullscreenElement);
+    }
+
+    function updateFullscreenBtn(){
+      fullscreenBtn.classList.toggle("is-active", isFullscreen());
+    }
+
+    fullscreenBtn.addEventListener("click", function(){
+      if (!isFullscreen()){
+        var el = document.documentElement;
+        var request = el.requestFullscreen || el.webkitRequestFullscreen;
+        if (request) request.call(el);
+      } else {
+        var exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) exit.call(document);
+      }
+    });
+    document.addEventListener("fullscreenchange", updateFullscreenBtn);
+    document.addEventListener("webkitfullscreenchange", updateFullscreenBtn);
+
+    showScreen("setup");
+  })();
+  </script>
+
+</body>
+</html>
