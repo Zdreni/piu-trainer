@@ -541,6 +541,33 @@ body{
   color:var(--bg-void);
 }
 
+.onboard-field{
+  display:flex;
+  flex-direction:column;
+  gap:0.4rem;
+}
+.onboard-field label{
+  font-size:0.7rem;
+  letter-spacing:0.1em;
+  color:var(--text-mid);
+  text-transform:uppercase;
+}
+.onboard-field input[type="number"]{
+  font-family:var(--font-mono);
+  font-size:1.4rem;
+  font-weight:700;
+  width:100%;
+  background:var(--bg-panel-2);
+  border:1px solid var(--line);
+  border-radius:10px;
+  color:var(--cyan);
+  padding:0.55rem 0.7rem;
+}
+.onboard-field input[type="number"]:focus{
+  outline:2px solid var(--cyan);
+  outline-offset:1px;
+}
+
 /* ---------- no-data banner ---------- */
 .no-data{
   position:relative;

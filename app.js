@@ -89,7 +89,8 @@
     levelKeys = Object.keys(levelData).map(Number).sort(function(a, b){ return a - b; });
   }
 
-  setActiveData(readStoredRawData() || LEVEL_DATA);
+  var initialStoredRawData = readStoredRawData();
+  setActiveData(initialStoredRawData || LEVEL_DATA);
 
   var state = { level: null, attemptIndex: 0, avSinglesChanged: true, avDoublesChanged: true };
   var lastLevelText = null;
@@ -127,6 +128,13 @@
   var jumpBtn = document.getElementById("jumpBtn");
 
   var fullscreenBtn = document.getElementById("fullscreenBtn");
+
+  var onboardModal = document.getElementById("onboardModal");
+  var onboardLevelInput = document.getElementById("onboardLevelInput");
+  var onboardAvSinglesInput = document.getElementById("onboardAvSinglesInput");
+  var onboardAvDoublesInput = document.getElementById("onboardAvDoublesInput");
+  var onboardError = document.getElementById("onboardError");
+  var onboardSaveBtn = document.getElementById("onboardSaveBtn");
 
   var importBtn = document.getElementById("importBtn");
   var viewDataBtn = document.getElementById("viewDataBtn");
@@ -503,5 +511,39 @@
   document.addEventListener("fullscreenchange", updateFullscreenBtn);
   document.addEventListener("webkitfullscreenchange", updateFullscreenBtn);
 
+  // ---- first-run onboarding ----
+  function onboardFail(msg){
+    onboardError.textContent = msg;
+    onboardError.hidden = false;
+  }
+
+  onboardSaveBtn.addEventListener("click", function(){
+    var level = parseInt(onboardLevelInput.value, 10);
+    var avSingles = parseInt(onboardAvSinglesInput.value, 10);
+    var avDoubles = parseInt(onboardAvDoublesInput.value, 10);
+
+    if (!Number.isFinite(level) || level < 1){
+      onboardFail("Enter a valid warm-up level.");
+      return;
+    }
+    if (!Number.isFinite(avSingles) || avSingles < 300 || avSingles > 999){
+      onboardFail("AV Singles must be between 300 and 999.");
+      return;
+    }
+    if (!Number.isFinite(avDoubles) || avDoubles < 300 || avDoubles > 999){
+      onboardFail("AV Doubles must be between 300 and 999.");
+      return;
+    }
+    onboardError.hidden = true;
+
+    var raw = {};
+    raw[String(level)] = { scores: [995, 990, 985, 980, 975, 970, 965], avSingles: avSingles, avDoubles: avDoubles };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(raw));
+    setActiveData(raw);
+    startLevelInput.value = level;
+    onboardModal.hidden = true;
+  });
+
   showScreen("setup");
+  if (!initialStoredRawData) onboardModal.hidden = false;
 })();
