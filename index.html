@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Pump It Up trainer</title>
-<link rel="stylesheet" href="level-controller.css?v=3">
+<link rel="stylesheet" href="level-controller.css?v=4">
 </head>
 <body>
 
@@ -79,7 +79,7 @@
       <button class="restart-btn" id="restartBtnNoData" title="Change level" aria-label="Change level">&#8634;</button>
       <div class="eyebrow">Level</div>
       <div class="level-number no-data-level" id="noDataLevel">--</div>
-      <p>No table entry for this level yet. Add it to <code>level-data.js</code>, or jump to a different level below.</p>
+      <p>No table entry for this level yet. Jump to a different level below, or add it via View / Edit Data on the setup screen.</p>
       <div class="jump-row">
         <input type="number" id="jumpInput" inputmode="numeric">
         <button id="jumpBtn">Jump</button>
@@ -125,8 +125,7 @@
 
   </div>
 
-  <script src="level-data.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=3"></script>
 
 </body>
 </html>

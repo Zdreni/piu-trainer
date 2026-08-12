@@ -90,7 +90,7 @@
   }
 
   var initialStoredRawData = readStoredRawData();
-  setActiveData(initialStoredRawData || LEVEL_DATA);
+  if (initialStoredRawData) setActiveData(initialStoredRawData);
 
   var state = { level: null, attemptIndex: 0, avSinglesChanged: true, avDoublesChanged: true };
   var lastLevelText = null;
@@ -487,7 +487,7 @@
       dataModalError.hidden = false;
       return;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed)); } catch (e){}
     setActiveData(parsed);
     closeDataModal();
     if (state.level !== null) render();
@@ -520,33 +520,35 @@
     onboardError.hidden = false;
   }
 
-  onboardSaveBtn.addEventListener("click", function(){
-    var level = parseInt(onboardLevelInput.value, 10);
-    var avSingles = parseInt(onboardAvSinglesInput.value, 10);
-    var avDoubles = parseInt(onboardAvDoublesInput.value, 10);
+  if (onboardModal && onboardSaveBtn){
+    onboardSaveBtn.addEventListener("click", function(){
+      var level = parseInt(onboardLevelInput.value, 10);
+      var avSingles = parseInt(onboardAvSinglesInput.value, 10);
+      var avDoubles = parseInt(onboardAvDoublesInput.value, 10);
 
-    if (!Number.isFinite(level) || level < 1){
-      onboardFail("Enter a valid warm-up level.");
-      return;
-    }
-    if (!Number.isFinite(avSingles) || avSingles < 300 || avSingles > 999){
-      onboardFail("AV Singles must be between 300 and 999.");
-      return;
-    }
-    if (!Number.isFinite(avDoubles) || avDoubles < 300 || avDoubles > 999){
-      onboardFail("AV Doubles must be between 300 and 999.");
-      return;
-    }
-    onboardError.hidden = true;
+      if (!Number.isFinite(level) || level < 1){
+        onboardFail("Enter a valid warm-up level.");
+        return;
+      }
+      if (!Number.isFinite(avSingles) || avSingles < 300 || avSingles > 999){
+        onboardFail("AV Singles must be between 300 and 999.");
+        return;
+      }
+      if (!Number.isFinite(avDoubles) || avDoubles < 300 || avDoubles > 999){
+        onboardFail("AV Doubles must be between 300 and 999.");
+        return;
+      }
+      onboardError.hidden = true;
 
-    var raw = {};
-    raw[String(level)] = { scores: [995, 990, 985, 980, 975, 970, 965], avSingles: avSingles, avDoubles: avDoubles };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(raw));
-    setActiveData(raw);
-    startLevelInput.value = level;
-    onboardModal.hidden = true;
-  });
+      var raw = {};
+      raw[String(level)] = { scores: [995, 990, 985, 980, 975, 970, 965], avSingles: avSingles, avDoubles: avDoubles };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(raw)); } catch (e){}
+      setActiveData(raw);
+      startLevelInput.value = level;
+      onboardModal.hidden = true;
+    });
+  }
 
   showScreen("setup");
-  if (!initialStoredRawData) onboardModal.hidden = false;
+  if (!initialStoredRawData && onboardModal) onboardModal.hidden = false;
 })();
