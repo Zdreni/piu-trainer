@@ -137,6 +137,8 @@
   var passBtn = document.getElementById("passBtn");
   var restartBtn = document.getElementById("restartBtn");
   var restartBtnNoData = document.getElementById("restartBtnNoData");
+  var levelDownBtn = document.getElementById("levelDownBtn");
+  var levelUpBtn = document.getElementById("levelUpBtn");
 
   var noDataLevelEl = document.getElementById("noDataLevel");
   var jumpInput = document.getElementById("jumpInput");
@@ -184,8 +186,10 @@
     burstGlow(burstEl);
   }
 
-  // Slides the old value out downward and the new value in from above, like a wheel/odometer digit.
-  function wheelText(el, text, baseClass){
+  // Slides the old value out and the new value in, like a wheel/odometer digit.
+  // direction 1 (default): old exits downward, new enters from above (value went up).
+  // direction -1: old exits upward, new enters from below (value went down).
+  function wheelText(el, text, baseClass, direction){
     if (el.classList.contains("wheel-active")){
       window.clearTimeout(el._wheelTimer);
       el.textContent = el.dataset.wheelValue || text;
@@ -220,13 +224,16 @@
     el.className = "wheel-active";
     el.dataset.wheelValue = text;
 
+    var enterFrom = direction === -1 ? "100%" : "-100%";
+    var exitTo = direction === -1 ? "-100%" : "100%";
+
     oldSpan.style.transform = "translateY(0%)";
-    newSpan.style.transform = "translateY(-100%)";
+    newSpan.style.transform = "translateY(" + enterFrom + ")";
 
     void el.offsetWidth; // reflow before animating to final positions
 
     requestAnimationFrame(function(){
-      oldSpan.style.transform = "translateY(100%)";
+      oldSpan.style.transform = "translateY(" + exitTo + ")";
       newSpan.style.transform = "translateY(0%)";
     });
 
@@ -324,6 +331,31 @@
     if (currentStepEl) currentStepEl.scrollIntoView({ block: "nearest", inline: "center" });
   }
 
+  // Vertically centers the level +/- buttons on the level indicator (horizontal position
+  // is fixed via CSS at the column's side borders). Uses getBoundingClientRect (not
+  // offsetTop) because .number-wrap is itself position:relative, which would otherwise
+  // skew levelNumberEl's offset to be relative to that narrow wrapper instead of .play.
+  function positionLevelNavButtons(){
+    if (playEl.hidden) return;
+    var playRect = playEl.getBoundingClientRect();
+    var numRect = levelNumberEl.getBoundingClientRect();
+    var centerY = numRect.top - playRect.top + numRect.height / 2;
+
+    levelDownBtn.style.top = centerY + "px";
+    levelUpBtn.style.top = centerY + "px";
+  }
+
+  function canDecreaseLevel(){
+    if (state.level === null || state.level <= 1) return false;
+    var lowestLevel = levelKeys && levelKeys.length ? levelKeys[0] : null;
+    if (lowestLevel !== null && state.level <= lowestLevel) return false;
+    return true;
+  }
+
+  function updateLevelNavButtons(){
+    levelDownBtn.classList.toggle("is-disabled", !canDecreaseLevel());
+  }
+
   function render(){
     var config = getConfig(state.level);
 
@@ -338,6 +370,7 @@
       lastLevelText = newLevelText;
       lastTargetText = null;
       lastTargetValue = null;
+      updateLevelNavButtons();
       return;
     }
 
@@ -364,7 +397,8 @@
     showScreen("play");
 
     if (levelChanged){
-      wheelText(levelNumberEl, newLevelText, "level-number");
+      var levelDirection = Number(newLevelText) < Number(lastLevelText) ? -1 : 1;
+      wheelText(levelNumberEl, newLevelText, "level-number", levelDirection);
       burstGlow(levelBurstEl);
     } else {
       levelNumberEl.textContent = newLevelText;
@@ -374,6 +408,9 @@
     lastLevelText = newLevelText;
     lastTargetText = newTargetText;
     lastTargetValue = target;
+
+    updateLevelNavButtons();
+    positionLevelNavButtons();
   }
 
   function startAt(level){
@@ -429,6 +466,18 @@
     if (state.attemptIndex < scores.length - 1) state.attemptIndex += 1;
     render();
   });
+
+  levelDownBtn.addEventListener("click", function(){
+    if (!canDecreaseLevel()) return;
+    startAt(state.level - 1);
+  });
+
+  levelUpBtn.addEventListener("click", function(){
+    if (state.level === null) return;
+    startAt(state.level + 1);
+  });
+
+  window.addEventListener("resize", positionLevelNavButtons);
 
   function backToSetup(){
     startLevelInput.value = state.level !== null ? state.level : 14;

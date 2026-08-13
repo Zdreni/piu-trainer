@@ -601,6 +601,34 @@ body{
   font-size:clamp(3rem, 16vw, 5rem);
 }
 
+.level-nav-btn{
+  position:absolute;
+  top:50%;
+  z-index:5;
+  width:2.6rem;
+  height:2.6rem;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:var(--bg-panel);
+  color:var(--text-mid);
+  font-size:1.4rem;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transform:translateY(-50%);
+}
+.level-nav-btn:active{
+  filter:brightness(0.8);
+}
+.level-nav-btn.is-disabled{
+  opacity:0.35;
+  pointer-events:none;
+}
+.level-nav-left{left:1rem;}
+.level-nav-right{right:1rem;}
+
 /* ---------- play screen ---------- */
 .play{
   position:relative;
