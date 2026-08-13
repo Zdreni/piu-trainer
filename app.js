@@ -53,16 +53,11 @@
       }
     }
 
-    // The lowest level has nothing below it to inherit from, so it must be fully specified.
+    // The lowest level has nothing below it to inherit from, so it must specify scores.
+    // AV (singles/doubles) is optional at any level — if absent, it's shown as N/A.
     var lowest = data[minKey];
     if (!Array.isArray(lowest.scores) || lowest.scores.length === 0){
       return { valid: false, error: "Level " + minKey + " is the lowest level in the table and must specify \"scores\" — there's nothing below it to inherit from." };
-    }
-    if (typeof lowest.avSingles !== "number" || !Number.isFinite(lowest.avSingles)){
-      return { valid: false, error: "Level " + minKey + " is the lowest level in the table and must specify \"avSingles\" — there's nothing below it to inherit from." };
-    }
-    if (typeof lowest.avDoubles !== "number" || !Number.isFinite(lowest.avDoubles)){
-      return { valid: false, error: "Level " + minKey + " is the lowest level in the table and must specify \"avDoubles\" — there's nothing below it to inherit from." };
     }
 
     return { valid: true };
@@ -77,6 +72,26 @@
     } catch (e){
       return null;
     }
+  }
+
+  var WARMUP_LEVEL_KEY = "piuTrainerWarmupLevel";
+
+  function readStoredWarmupLevel(){
+    try {
+      var raw = localStorage.getItem(WARMUP_LEVEL_KEY);
+      var val = parseInt(raw, 10);
+      return Number.isFinite(val) && val >= 1 ? val : null;
+    } catch (e){
+      return null;
+    }
+  }
+
+  function saveWarmupLevel(level){
+    try { localStorage.setItem(WARMUP_LEVEL_KEY, String(level)); } catch (e){}
+  }
+
+  function clearWarmupLevel(){
+    try { localStorage.removeItem(WARMUP_LEVEL_KEY); } catch (e){}
   }
 
   var activeRawData = null;
@@ -129,13 +144,6 @@
 
   var fullscreenBtn = document.getElementById("fullscreenBtn");
 
-  var onboardModal = document.getElementById("onboardModal");
-  var onboardLevelInput = document.getElementById("onboardLevelInput");
-  var onboardAvSinglesInput = document.getElementById("onboardAvSinglesInput");
-  var onboardAvDoublesInput = document.getElementById("onboardAvDoublesInput");
-  var onboardError = document.getElementById("onboardError");
-  var onboardSaveBtn = document.getElementById("onboardSaveBtn");
-
   var importBtn = document.getElementById("importBtn");
   var viewDataBtn = document.getElementById("viewDataBtn");
   var dataModal = document.getElementById("dataModal");
@@ -149,6 +157,7 @@
   // ---- helpers ----
   // A level with no explicit table entry inherits from the nearest lower level that has one.
   function getConfig(level){
+    if (!levelKeys) return undefined;
     var target = Number(level);
     var resolvedKey = null;
     for (var i = 0; i < levelKeys.length; i++){
@@ -231,9 +240,11 @@
 
   function updateAvValue(el, value, changed, previousValue){
     if (value === undefined){
-      el.textContent = "—";
+      el.textContent = "N/A";
+      el.classList.add("is-na");
       return null;
     }
+    el.classList.remove("is-na");
     if (changed && previousValue !== null){
       animateCount(el, previousValue, value, 600);
     } else {
@@ -388,11 +399,23 @@
       return;
     }
     setupError.hidden = true;
+    saveWarmupLevel(val);
+    if (!activeRawData){
+      var raw = {};
+      raw[String(val)] = { scores: [995, 990, 985, 980, 975, 970, 965] };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(raw)); } catch (e){}
+      setActiveData(raw);
+    }
     startAt(val);
   });
 
   startLevelInput.addEventListener("keydown", function(e){
     if (e.key === "Enter") startBtn.click();
+  });
+
+  startLevelInput.addEventListener("input", function(){
+    var val = parseInt(startLevelInput.value, 10);
+    if (Number.isFinite(val) && val >= 1) saveWarmupLevel(val);
   });
 
   passBtn.addEventListener("click", function(){
@@ -424,16 +447,30 @@
   });
 
   // ---- data import / view-edit modal ----
+  var dataModalMode = "import";
+
+  // Everything the app keeps in localStorage, combined into one editable JSON blob.
+  function buildFullSettings(){
+    var settings = {};
+    var warmup = readStoredWarmupLevel();
+    if (warmup !== null) settings.warmupLevel = warmup;
+    if (activeRawData) settings.levels = activeRawData;
+    return settings;
+  }
+
   function openDataModal(mode){
     dataModalError.hidden = true;
     dataModalError.textContent = "";
+    dataModalMode = mode;
     if (mode === "import"){
       dataModalTitle.textContent = "Import Level Data";
       dataTextarea.value = "";
       dataTextarea.placeholder = "Paste level data JSON here…";
     } else {
-      dataModalTitle.textContent = "Level Data (Local Storage)";
-      dataTextarea.value = JSON.stringify(activeRawData, null, 2);
+      dataModalTitle.textContent = "App Data (Local Storage)";
+      var settings = buildFullSettings();
+      dataTextarea.value = Object.keys(settings).length ? JSON.stringify(settings, null, 2) : "";
+      dataTextarea.placeholder = "Paste app data JSON here…";
     }
     dataModal.hidden = false;
     dataTextarea.focus();
@@ -441,6 +478,25 @@
 
   function closeDataModal(){
     dataModal.hidden = true;
+  }
+
+  // Clears every setting the app keeps in localStorage and returns to the pre-save state.
+  function clearAllData(){
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e){}
+    clearWarmupLevel();
+    activeRawData = null;
+    levelData = null;
+    levelKeys = null;
+    state.level = null;
+    state.attemptIndex = 0;
+    lastLevelText = null;
+    lastTargetText = null;
+    lastTargetValue = null;
+    lastAvSinglesValue = null;
+    lastAvDoublesValue = null;
+    startLevelInput.value = "";
+    closeDataModal();
+    showScreen("setup");
   }
 
   importBtn.addEventListener("click", function(){ openDataModal("import"); });
@@ -473,24 +529,108 @@
   });
 
   saveDataBtn.addEventListener("click", function(){
+    var raw = dataTextarea.value.trim();
+
+    if (dataModalMode === "import"){
+      if (raw === ""){
+        dataModalError.textContent = "Paste level data JSON to import.";
+        dataModalError.hidden = false;
+        return;
+      }
+      var importedLevels;
+      try {
+        importedLevels = JSON.parse(raw);
+      } catch (e){
+        dataModalError.textContent = "Invalid JSON: " + e.message;
+        dataModalError.hidden = false;
+        return;
+      }
+      var importCheck = validateLevelData(importedLevels);
+      if (!importCheck.valid){
+        dataModalError.textContent = importCheck.error;
+        dataModalError.hidden = false;
+        return;
+      }
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(importedLevels)); } catch (e){}
+      setActiveData(importedLevels);
+      closeDataModal();
+      if (state.level !== null) render();
+      return;
+    }
+
+    // "view" mode edits every localStorage-backed setting at once.
+    if (raw === "" || raw === "{}"){
+      clearAllData();
+      return;
+    }
+
     var parsed;
     try {
-      parsed = JSON.parse(dataTextarea.value);
+      parsed = JSON.parse(raw);
     } catch (e){
       dataModalError.textContent = "Invalid JSON: " + e.message;
       dataModalError.hidden = false;
       return;
     }
-    var check = validateLevelData(parsed);
-    if (!check.valid){
-      dataModalError.textContent = check.error;
+
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)){
+      dataModalError.textContent = "Top-level JSON must be an object with \"warmupLevel\" and/or \"levels\".";
       dataModalError.hidden = false;
       return;
     }
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed)); } catch (e){}
-    setActiveData(parsed);
+
+    if (Object.keys(parsed).length === 0){
+      clearAllData();
+      return;
+    }
+
+    if (parsed.levels !== undefined){
+      var levelsCheck = validateLevelData(parsed.levels);
+      if (!levelsCheck.valid){
+        dataModalError.textContent = "levels: " + levelsCheck.error;
+        dataModalError.hidden = false;
+        return;
+      }
+    }
+
+    if (parsed.warmupLevel !== undefined && (typeof parsed.warmupLevel !== "number" || !Number.isFinite(parsed.warmupLevel) || parsed.warmupLevel < 1)){
+      dataModalError.textContent = "\"warmupLevel\" must be a positive number.";
+      dataModalError.hidden = false;
+      return;
+    }
+
+    if (parsed.levels !== undefined){
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed.levels)); } catch (e){}
+      setActiveData(parsed.levels);
+    } else {
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e){}
+      activeRawData = null;
+      levelData = null;
+      levelKeys = null;
+    }
+
+    if (parsed.warmupLevel !== undefined){
+      saveWarmupLevel(parsed.warmupLevel);
+      startLevelInput.value = parsed.warmupLevel;
+    } else {
+      clearWarmupLevel();
+      startLevelInput.value = "";
+    }
+
     closeDataModal();
-    if (state.level !== null) render();
+
+    if (state.level !== null && getConfig(state.level)){
+      render();
+    } else {
+      state.level = null;
+      state.attemptIndex = 0;
+      lastLevelText = null;
+      lastTargetText = null;
+      lastTargetValue = null;
+      lastAvSinglesValue = null;
+      lastAvDoublesValue = null;
+      showScreen("setup");
+    }
   });
 
   function isFullscreen(){
@@ -514,41 +654,9 @@
   document.addEventListener("fullscreenchange", updateFullscreenBtn);
   document.addEventListener("webkitfullscreenchange", updateFullscreenBtn);
 
-  // ---- first-run onboarding ----
-  function onboardFail(msg){
-    onboardError.textContent = msg;
-    onboardError.hidden = false;
-  }
-
-  if (onboardModal && onboardSaveBtn){
-    onboardSaveBtn.addEventListener("click", function(){
-      var level = parseInt(onboardLevelInput.value, 10);
-      var avSingles = parseInt(onboardAvSinglesInput.value, 10);
-      var avDoubles = parseInt(onboardAvDoublesInput.value, 10);
-
-      if (!Number.isFinite(level) || level < 1){
-        onboardFail("Enter a valid warm-up level.");
-        return;
-      }
-      if (!Number.isFinite(avSingles) || avSingles < 300 || avSingles > 999){
-        onboardFail("AV Singles must be between 300 and 999.");
-        return;
-      }
-      if (!Number.isFinite(avDoubles) || avDoubles < 300 || avDoubles > 999){
-        onboardFail("AV Doubles must be between 300 and 999.");
-        return;
-      }
-      onboardError.hidden = true;
-
-      var raw = {};
-      raw[String(level)] = { scores: [995, 990, 985, 980, 975, 970, 965], avSingles: avSingles, avDoubles: avDoubles };
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(raw)); } catch (e){}
-      setActiveData(raw);
-      startLevelInput.value = level;
-      onboardModal.hidden = true;
-    });
-  }
+  // ---- warm-up level prefill ----
+  var storedWarmupLevel = readStoredWarmupLevel();
+  if (storedWarmupLevel !== null) startLevelInput.value = storedWarmupLevel;
 
   showScreen("setup");
-  if (!initialStoredRawData && onboardModal) onboardModal.hidden = false;
 })();

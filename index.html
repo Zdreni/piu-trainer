@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Pump It Up trainer</title>
-<link rel="stylesheet" href="level-controller.css?v=4">
+<link rel="stylesheet" href="level-controller.css?v=8">
 </head>
 <body>
 
@@ -20,7 +20,7 @@
       <h1>Pump It Up <span>trainer</span></h1>
       <div class="field">
         <label for="startLevelInput">Start at level</label>
-        <input type="number" id="startLevelInput" value="14" min="1" inputmode="numeric">
+        <input type="number" id="startLevelInput" placeholder="e.g. 14" min="1" inputmode="numeric">
       </div>
       <button id="startBtn">Go</button>
       <p class="error" id="setupError" hidden>Enter a valid level number.</p>
@@ -86,29 +86,6 @@
       </div>
     </section>
 
-    <!-- FIRST-RUN ONBOARDING MODAL -->
-    <div class="modal-overlay" id="onboardModal" hidden>
-      <div class="modal">
-        <h2>Set Up Your Warm-Up</h2>
-        <div class="onboard-field">
-          <label for="onboardLevelInput">Warm-up level</label>
-          <input type="number" id="onboardLevelInput" min="1" step="1" inputmode="numeric" placeholder="e.g. 14">
-        </div>
-        <div class="onboard-field">
-          <label for="onboardAvSinglesInput">AV &middot; on singles (300&ndash;999)</label>
-          <input type="number" id="onboardAvSinglesInput" min="300" max="999" step="1" inputmode="numeric" placeholder="e.g. 700">
-        </div>
-        <div class="onboard-field">
-          <label for="onboardAvDoublesInput">AV &middot; on doubles (300&ndash;999)</label>
-          <input type="number" id="onboardAvDoublesInput" min="300" max="999" step="1" inputmode="numeric" placeholder="e.g. 680">
-        </div>
-        <p class="error" id="onboardError" hidden></p>
-        <div class="modal-actions">
-          <button type="button" class="modal-btn primary" id="onboardSaveBtn">Save & Start</button>
-        </div>
-      </div>
-    </div>
-
     <!-- DATA IMPORT / VIEW-EDIT MODAL -->
     <div class="modal-overlay" id="dataModal" hidden>
       <div class="modal">
@@ -125,7 +102,7 @@
 
   </div>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=6"></script>
 
 </body>
 </html>
