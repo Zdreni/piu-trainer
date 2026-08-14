@@ -286,30 +286,42 @@ body{
   align-items:center;
   justify-content:center;
   gap:0.4rem;
-  padding:0.5rem 1rem;
+  padding:0.5rem 0;
 }
 
 /* ---------- action buttons ---------- */
-.actions{
+.target-row{
   display:flex;
-  gap:0.7rem;
-  padding:0 1rem;
-  padding-bottom:max(1rem, env(safe-area-inset-bottom));
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  padding:0 0.5rem;
+  padding-bottom:max(0.5rem, env(safe-area-inset-bottom));
 }
 .btn{
-  flex:1;
+  flex:0 0 auto;
+  width:clamp(3.63rem, 15.7vw, 5.28rem);
+  height:clamp(2.86rem, 12.35vw, 4.16rem);
+  display:flex;
+  align-items:center;
+  justify-content:center;
   border:none;
   border-radius:16px;
-  padding:1.1rem 0.5rem;
+  padding:0.35rem;
   font-family:var(--font-display);
   font-weight:800;
-  font-size:0.95rem;
-  letter-spacing:0.06em;
+  font-size:clamp(0.76rem, 2.9vw, 0.98rem);
+  line-height:1.2;
+  letter-spacing:0.02em;
   text-transform:uppercase;
+  text-align:center;
   cursor:pointer;
   color:var(--bg-void);
   transition:transform 90ms ease, filter 150ms ease;
 }
+.btn .btn-label{display:inline-block; transform:translateY(-8%);}
+.btn .btn-top{font-size:0.78em;}
+.btn .btn-score{white-space:nowrap; font-size:1.18em;}
 .btn:active{transform:scale(0.96);}
 .btn-fail{
   background:linear-gradient(180deg, #ff6b81, var(--red));

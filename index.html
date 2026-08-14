@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Pump It Up trainer</title>
-<link rel="stylesheet" href="level-controller.css?v=12">
+<link rel="stylesheet" href="level-controller.css?v=17">
 </head>
 <body>
 
@@ -65,15 +65,14 @@
 
       <div class="target-block">
         <div class="eyebrow">Chart Target Score</div>
-        <div class="number-wrap">
-          <div class="burst cyan" id="targetBurst"></div>
-          <div class="target-number" id="targetNumber" aria-live="polite">--</div>
+        <div class="target-row">
+          <button class="btn btn-fail" id="failBtn"><span class="btn-label"><span class="btn-top">Fail</span><br><span class="btn-score" id="failBtnScore">&lt; --</span></span></button>
+          <div class="number-wrap">
+            <div class="burst cyan" id="targetBurst"></div>
+            <div class="target-number" id="targetNumber" aria-live="polite">--</div>
+          </div>
+          <button class="btn btn-pass" id="passBtn"><span class="btn-label"><span class="btn-top">Pass</span><br><span class="btn-score" id="passBtnScore">&ge; --</span></span></button>
         </div>
-      </div>
-
-      <div class="actions">
-        <button class="btn btn-fail" id="failBtn">Score Missed</button>
-        <button class="btn btn-pass" id="passBtn">Score Achieved</button>
       </div>
     </section>
 
@@ -105,7 +104,7 @@
 
   </div>
 
-  <script src="app.js?v=13"></script>
+  <script src="app.js?v=14"></script>
 
 </body>
 </html>

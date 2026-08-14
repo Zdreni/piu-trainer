@@ -135,6 +135,8 @@
 
   var failBtn = document.getElementById("failBtn");
   var passBtn = document.getElementById("passBtn");
+  var failBtnScoreEl = document.getElementById("failBtnScore");
+  var passBtnScoreEl = document.getElementById("passBtnScore");
   var restartBtn = document.getElementById("restartBtn");
   var restartBtnNoData = document.getElementById("restartBtnNoData");
   var levelDownBtn = document.getElementById("levelDownBtn");
@@ -393,6 +395,8 @@
     } else {
       targetNumberEl.textContent = newTargetText;
     }
+    failBtnScoreEl.textContent = "< " + newTargetText;
+    passBtnScoreEl.textContent = "≥ " + newTargetText;
 
     showScreen("play");
 
