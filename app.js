@@ -484,7 +484,8 @@
   window.addEventListener("resize", positionLevelNavButtons);
 
   function backToSetup(){
-    startLevelInput.value = state.level !== null ? state.level : 14;
+    var storedWarmup = readStoredWarmupLevel();
+    startLevelInput.value = storedWarmup !== null ? storedWarmup : 14;
     showScreen("setup");
   }
   restartBtn.addEventListener("click", backToSetup);
