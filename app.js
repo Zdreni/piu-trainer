@@ -336,11 +336,11 @@
   }
 
   // The session-progress strip always ends in one "pending" cell: the level/target
-  // the user is about to try right now, with a "?" footer (so it matches the height
-  // of resolved cells) and a yellow (not-yet-decided) score. It's created once and
-  // then just updated in place as the user browses levels — only an actual Pass/Fail
-  // "resolves" it into a permanent, footer-tagged cell and opens a fresh pending cell
-  // for the next attempt.
+  // the user is about to try right now, inverted yellow with an empty footer (so it
+  // still matches the height of resolved cells). It's created once and then just
+  // updated in place as the user browses levels — only an actual Pass/Fail "resolves"
+  // it into a permanent, footer-tagged cell and opens a fresh pending cell for the
+  // next attempt.
   var pendingCellEl = null;
   var pendingHeadEl = null;
   var pendingScoreEl = null;
@@ -359,7 +359,7 @@
 
       pendingStatusEl = document.createElement("div");
       pendingStatusEl.className = "session-cell-status";
-      pendingStatusEl.textContent = "?";
+      pendingStatusEl.textContent = "";
 
       pendingCellEl.appendChild(pendingHeadEl);
       pendingCellEl.appendChild(pendingScoreEl);

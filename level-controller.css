@@ -223,7 +223,7 @@ body{
 }
 .session-scroll{
   display:flex;
-  align-items:flex-end;
+  align-items:center;
   gap:0.5rem;
   overflow-x:auto;
   padding:0.5rem 0.2rem;
@@ -295,11 +295,27 @@ body{
   from{opacity:0; transform:translateY(-3px);}
   to{opacity:1; transform:translateY(0);}
 }
-.session-cell.pending .session-cell-score{
-  color:var(--amber);
+.session-cell.pending{
+  background:var(--amber);
+  border-color:var(--amber);
+  padding-top:0.85rem;
+  padding-bottom:0.85rem;
+}
+.session-cell.pending .session-cell-head,
+.session-cell.pending .session-cell-score,
+.session-cell.pending .session-cell-status{
+  color:var(--bg-void);
+}
+.session-cell.pending .session-cell-head{
+  font-size:1.65rem;
+  order:1;
 }
 .session-cell.pending .session-cell-status{
-  color:var(--text-low);
+  order:2;
+}
+.session-cell.pending .session-cell-score{
+  font-size:1.2rem;
+  order:3;
 }
 .session-cell.pass{
   border-color:rgba(92,230,148,0.4);
