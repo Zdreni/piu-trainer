@@ -335,38 +335,71 @@
     if (currentStepEl) currentStepEl.scrollIntoView({ block: "nearest", inline: "center" });
   }
 
-  // Appends a cell for one completed try to the session-progress strip, animates
-  // it in, and scrolls it into view. Every Pass/Fail click produces its own cell,
-  // so a level with several failed tries shows up as several consecutive cells.
-  function addSessionTry(level, targetScore, success){
-    var cell = document.createElement("div");
-    cell.className = "session-cell " + (success ? "pass" : "fail");
+  // The session-progress strip always ends in one "pending" cell: the level/target
+  // the user is about to try right now, with a "?" footer (so it matches the height
+  // of resolved cells) and a yellow (not-yet-decided) score. It's created once and
+  // then just updated in place as the user browses levels — only an actual Pass/Fail
+  // "resolves" it into a permanent, footer-tagged cell and opens a fresh pending cell
+  // for the next attempt.
+  var pendingCellEl = null;
+  var pendingHeadEl = null;
+  var pendingScoreEl = null;
+  var pendingStatusEl = null;
 
-    var head = document.createElement("div");
-    head.className = "session-cell-head";
-    if (level !== lastSessionLevel) head.classList.add("level-changed");
-    head.textContent = level;
-    lastSessionLevel = level;
+  function showPendingSessionCell(level, targetScore){
+    if (!pendingCellEl){
+      pendingCellEl = document.createElement("div");
+      pendingCellEl.className = "session-cell pending";
 
-    var score = document.createElement("div");
-    score.className = "session-cell-score";
-    score.textContent = formatScore(targetScore);
+      pendingHeadEl = document.createElement("div");
+      pendingHeadEl.className = "session-cell-head";
 
-    var status = document.createElement("div");
-    status.className = "session-cell-status";
-    status.textContent = success ? "Done" : "Fail";
+      pendingScoreEl = document.createElement("div");
+      pendingScoreEl.className = "session-cell-score";
 
-    cell.appendChild(head);
-    cell.appendChild(score);
-    cell.appendChild(status);
-    sessionScrollEl.appendChild(cell);
+      pendingStatusEl = document.createElement("div");
+      pendingStatusEl.className = "session-cell-status";
+      pendingStatusEl.textContent = "?";
+
+      pendingCellEl.appendChild(pendingHeadEl);
+      pendingCellEl.appendChild(pendingScoreEl);
+      pendingCellEl.appendChild(pendingStatusEl);
+      sessionScrollEl.appendChild(pendingCellEl);
+    }
+
+    pendingHeadEl.classList.toggle("level-changed", level !== lastSessionLevel);
+    pendingHeadEl.textContent = level;
+    pendingScoreEl.textContent = formatScore(targetScore);
 
     sessionScrollEl.scrollLeft = sessionScrollEl.scrollWidth;
+  }
+
+  // Turns the pending cell into a permanent record of the try that just happened.
+  function resolveSessionTry(success){
+    if (!pendingCellEl) return;
+
+    lastSessionLevel = state.level;
+    pendingCellEl.classList.remove("pending");
+    pendingCellEl.classList.add(success ? "pass" : "fail");
+
+    pendingStatusEl.textContent = success ? "Done" : "Fail";
+    pendingStatusEl.classList.remove("session-cell-status");
+    void pendingStatusEl.offsetWidth; // reflow to restart the entrance animation
+    pendingStatusEl.classList.add("session-cell-status");
+
+    pendingCellEl = null;
+    pendingHeadEl = null;
+    pendingScoreEl = null;
+    pendingStatusEl = null;
   }
 
   function resetSessionHistory(){
     sessionScrollEl.innerHTML = "";
     lastSessionLevel = null;
+    pendingCellEl = null;
+    pendingHeadEl = null;
+    pendingScoreEl = null;
+    pendingStatusEl = null;
   }
 
   // Touch already scrolls this natively; mouse/pen don't support click-drag on an
@@ -456,6 +489,7 @@
     avSinglesEl.classList.toggle("is-unchanged", !state.avSinglesChanged);
     avDoublesEl.classList.toggle("is-unchanged", !state.avDoublesChanged);
     buildLadder(scores, state.attemptIndex);
+    showPendingSessionCell(state.level, target);
 
     if (targetChanged || levelChanged){
       animateCount(targetNumberEl, lastTargetValue !== null ? lastTargetValue : target, target, 600);
@@ -528,11 +562,7 @@
   });
 
   passBtn.addEventListener("click", function(){
-    var config = getConfig(state.level);
-    if (config){
-      var scores = config.scores || [];
-      addSessionTry(state.level, scores[state.attemptIndex], true);
-    }
+    resolveSessionTry(true);
     startAt(state.level + 1);
   });
 
@@ -540,7 +570,7 @@
     var config = getConfig(state.level);
     if (!config) return;
     var scores = config.scores || [];
-    addSessionTry(state.level, scores[state.attemptIndex], false);
+    resolveSessionTry(false);
     if (state.attemptIndex < scores.length - 1) state.attemptIndex += 1;
     render();
   });

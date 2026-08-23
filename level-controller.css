@@ -283,6 +283,17 @@ body{
   text-transform:uppercase;
   line-height:1;
   margin-top:0.1rem;
+  animation:sessionStatusIn 220ms ease;
+}
+@keyframes sessionStatusIn{
+  from{opacity:0; transform:translateY(-3px);}
+  to{opacity:1; transform:translateY(0);}
+}
+.session-cell.pending .session-cell-score{
+  color:var(--amber);
+}
+.session-cell.pending .session-cell-status{
+  color:var(--text-low);
 }
 .session-cell.pass{
   border-color:rgba(92,230,148,0.4);
@@ -726,4 +737,5 @@ body{
   .splash-pop{animation:none;}
   .burst.active{animation:none;}
   .session-cell{animation:none; opacity:1; transform:none;}
+  .session-cell-status{animation:none; opacity:1; transform:none;}
 }
