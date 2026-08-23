@@ -108,6 +108,7 @@
   if (initialStoredRawData) setActiveData(initialStoredRawData);
 
   var state = { level: null, attemptIndex: 0, avSinglesChanged: true, avDoublesChanged: true };
+  var lastSessionLevel = null;
   var lastLevelText = null;
   var lastTargetText = null;
   var lastTargetValue = null;
@@ -130,6 +131,7 @@
   var avDoublesEl = document.getElementById("avDoubles");
   var ladderEl = document.getElementById("ladder");
   var attemptTagEl = document.getElementById("attemptTag");
+  var sessionScrollEl = document.getElementById("sessionScroll");
   var targetNumberEl = document.getElementById("targetNumber");
   var targetBurstEl = document.getElementById("targetBurst");
 
@@ -138,7 +140,6 @@
   var failBtnScoreEl = document.getElementById("failBtnScore");
   var passBtnScoreEl = document.getElementById("passBtnScore");
   var restartBtn = document.getElementById("restartBtn");
-  var restartBtnNoData = document.getElementById("restartBtnNoData");
   var levelDownBtn = document.getElementById("levelDownBtn");
   var levelUpBtn = document.getElementById("levelUpBtn");
 
@@ -302,6 +303,7 @@
     setupEl.hidden = name !== "setup";
     playEl.hidden = name !== "play";
     noDataEl.hidden = name !== "noData";
+    restartBtn.classList.toggle("is-hidden", name === "setup");
   }
 
   function buildLadder(scores, attemptIndex){
@@ -332,6 +334,71 @@
     attemptTagEl.textContent = (attemptIndex + 1) + "/" + scores.length;
     if (currentStepEl) currentStepEl.scrollIntoView({ block: "nearest", inline: "center" });
   }
+
+  // Appends a cell for one completed try to the session-progress strip, animates
+  // it in, and scrolls it into view. Every Pass/Fail click produces its own cell,
+  // so a level with several failed tries shows up as several consecutive cells.
+  function addSessionTry(level, targetScore, success){
+    var cell = document.createElement("div");
+    cell.className = "session-cell " + (success ? "pass" : "fail");
+
+    var head = document.createElement("div");
+    head.className = "session-cell-head";
+    if (level !== lastSessionLevel) head.classList.add("level-changed");
+    head.textContent = level;
+    lastSessionLevel = level;
+
+    var score = document.createElement("div");
+    score.className = "session-cell-score";
+    score.textContent = formatScore(targetScore);
+
+    var status = document.createElement("div");
+    status.className = "session-cell-status";
+    status.textContent = success ? "Done" : "Fail";
+
+    cell.appendChild(head);
+    cell.appendChild(score);
+    cell.appendChild(status);
+    sessionScrollEl.appendChild(cell);
+
+    sessionScrollEl.scrollLeft = sessionScrollEl.scrollWidth;
+  }
+
+  function resetSessionHistory(){
+    sessionScrollEl.innerHTML = "";
+    lastSessionLevel = null;
+  }
+
+  // Touch already scrolls this natively; mouse/pen don't support click-drag on an
+  // overflow element by default, so we translate pointer movement into scrollLeft.
+  function enableDragScroll(el){
+    var dragging = false;
+    var startX = 0;
+    var startScrollLeft = 0;
+
+    el.addEventListener("pointerdown", function(e){
+      if (e.pointerType === "touch") return;
+      dragging = true;
+      startX = e.clientX;
+      startScrollLeft = el.scrollLeft;
+      el.classList.add("is-dragging");
+      el.setPointerCapture(e.pointerId);
+    });
+
+    el.addEventListener("pointermove", function(e){
+      if (!dragging) return;
+      el.scrollLeft = startScrollLeft - (e.clientX - startX);
+    });
+
+    function endDrag(e){
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove("is-dragging");
+    }
+    el.addEventListener("pointerup", endDrag);
+    el.addEventListener("pointercancel", endDrag);
+  }
+  enableDragScroll(sessionScrollEl);
 
   // Vertically centers the level +/- buttons on the level indicator (horizontal position
   // is fixed via CSS at the column's side borders). Uses getBoundingClientRect (not
@@ -440,6 +507,7 @@
       return;
     }
     setupError.hidden = true;
+    resetSessionHistory();
     saveWarmupLevel(val);
     if (!activeRawData){
       var raw = {};
@@ -460,6 +528,11 @@
   });
 
   passBtn.addEventListener("click", function(){
+    var config = getConfig(state.level);
+    if (config){
+      var scores = config.scores || [];
+      addSessionTry(state.level, scores[state.attemptIndex], true);
+    }
     startAt(state.level + 1);
   });
 
@@ -467,6 +540,7 @@
     var config = getConfig(state.level);
     if (!config) return;
     var scores = config.scores || [];
+    addSessionTry(state.level, scores[state.attemptIndex], false);
     if (state.attemptIndex < scores.length - 1) state.attemptIndex += 1;
     render();
   });
@@ -489,7 +563,6 @@
     showScreen("setup");
   }
   restartBtn.addEventListener("click", backToSetup);
-  restartBtnNoData.addEventListener("click", backToSetup);
 
   jumpBtn.addEventListener("click", function(){
     var val = parseInt(jumpInput.value, 10);
@@ -548,6 +621,7 @@
     lastTargetValue = null;
     lastAvSinglesValue = null;
     lastAvDoublesValue = null;
+    resetSessionHistory();
     startLevelInput.value = "";
     closeDataModal();
     showScreen("setup");
@@ -683,6 +757,7 @@
       lastTargetValue = null;
       lastAvSinglesValue = null;
       lastAvDoublesValue = null;
+      resetSessionHistory();
       showScreen("setup");
     }
   });

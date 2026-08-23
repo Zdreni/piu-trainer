@@ -67,6 +67,49 @@ body{
   flex-direction:column;
 }
 
+/* ---------- shared app header ---------- */
+.app-header{
+  position:relative;
+  z-index:5;
+  flex:0 0 auto;
+  display:grid;
+  grid-template-columns:2.6rem 1fr 2.6rem;
+  align-items:center;
+  gap:0.5rem;
+  min-height:3.6rem;
+  padding:0.6rem 0.9rem;
+}
+.app-header-title{
+  text-align:center;
+  font-size:0.95rem;
+  font-weight:700;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--text-hi);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.app-header-title span{color:var(--pink);}
+.header-btn{
+  width:2.4rem;
+  height:2.4rem;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:var(--bg-panel);
+  color:var(--text-mid);
+  font-size:1.1rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:transform 200ms ease;
+}
+.header-btn:active{transform:scale(0.92);}
+.header-btn.is-hidden{visibility:hidden; pointer-events:none;}
+#fullscreenBtn.is-active{transform:rotate(45deg);}
+#fullscreenBtn.is-active:active{transform:rotate(45deg) scale(0.92);}
+
 .eyebrow{
   font-size:0.72rem;
   font-weight:700;
@@ -174,6 +217,82 @@ body{
   align-items:center;
   gap:0.35rem;
 }
+
+.session-wrap{
+  padding:0.6rem 1rem 0;
+}
+.session-scroll{
+  display:flex;
+  align-items:flex-end;
+  gap:0.5rem;
+  overflow-x:auto;
+  padding:0.5rem 0.2rem;
+  scrollbar-width:none;
+  scroll-behavior:smooth;
+  touch-action:pan-x;
+  -webkit-overflow-scrolling:touch;
+  cursor:grab;
+  user-select:none;
+}
+.session-scroll::-webkit-scrollbar{display:none;}
+.session-scroll.is-dragging{
+  cursor:grabbing;
+  scroll-behavior:auto;
+}
+.session-cell{
+  flex:0 0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0.15rem;
+  min-width:3.4rem;
+  padding:0.5rem 0.65rem;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--bg-panel);
+  opacity:0;
+  transform:scale(0.7) translateY(6px);
+  animation:sessionCellIn 320ms cubic-bezier(0.22,0.61,0.36,1) forwards;
+}
+@keyframes sessionCellIn{
+  to{opacity:1; transform:scale(1) translateY(0);}
+}
+.session-cell-head{
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums;
+  font-weight:800;
+  font-size:1.05rem;
+  color:var(--text-hi);
+  line-height:1;
+}
+.session-cell-head.level-changed{
+  color:var(--amber);
+}
+.session-cell-score{
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums;
+  font-weight:600;
+  font-size:0.78rem;
+  color:var(--text-mid);
+  line-height:1.2;
+}
+.session-cell-status{
+  font-size:0.6rem;
+  font-weight:800;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  line-height:1;
+  margin-top:0.1rem;
+}
+.session-cell.pass{
+  border-color:rgba(92,230,148,0.4);
+}
+.session-cell.pass .session-cell-status{color:var(--green);}
+.session-cell.fail{
+  border-color:rgba(255,71,87,0.35);
+}
+.session-cell.fail .session-cell-status{color:var(--red);}
+.session-cell.fail .session-cell-score{text-decoration:line-through;}
 
 .mods-row{
   display:flex;
@@ -334,47 +453,6 @@ body{
 .btn-fail:active{box-shadow:0 2px 0 #b3222f;}
 .btn-pass:active{box-shadow:0 2px 0 #2f8a5a;}
 
-.restart-btn{
-  position:absolute;
-  top:0.9rem;
-  left:0.9rem;
-  z-index:2;
-  width:2.4rem;
-  height:2.4rem;
-  border-radius:50%;
-  border:1px solid var(--line);
-  background:var(--bg-panel);
-  color:var(--text-mid);
-  font-size:1.1rem;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-}
-.restart-btn:active{transform:scale(0.92);}
-
-.fullscreen-btn{
-  position:fixed;
-  top:0.9rem;
-  right:0.9rem;
-  z-index:10;
-  width:2.4rem;
-  height:2.4rem;
-  border-radius:50%;
-  border:1px solid var(--line);
-  background:var(--bg-panel);
-  color:var(--text-mid);
-  font-size:1.1rem;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition:transform 200ms ease;
-}
-.fullscreen-btn:active{transform:scale(0.92);}
-.fullscreen-btn.is-active{transform:rotate(45deg);}
-.fullscreen-btn.is-active:active{transform:rotate(45deg) scale(0.92);}
-
 /* ---------- setup screen ---------- */
 .setup{
   flex:1;
@@ -386,14 +464,6 @@ body{
   padding:1.5rem;
   text-align:center;
 }
-.setup h1{
-  font-size:1.1rem;
-  letter-spacing:0.22em;
-  text-transform:uppercase;
-  color:var(--text-hi);
-  margin:0;
-}
-.setup h1 span{color:var(--pink);}
 .setup .field{
   display:flex;
   flex-direction:column;
@@ -655,4 +725,5 @@ body{
   .lanes{animation:none;}
   .splash-pop{animation:none;}
   .burst.active{animation:none;}
+  .session-cell{animation:none; opacity:1; transform:none;}
 }

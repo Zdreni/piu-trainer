@@ -4,20 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Pump It Up trainer</title>
-<link rel="stylesheet" href="level-controller.css?v=17">
+<link rel="stylesheet" href="level-controller.css?v=22">
 </head>
 <body>
 
   <div class="lanes"></div>
   <div class="vignette"></div>
 
-  <button class="fullscreen-btn" id="fullscreenBtn" title="Toggle fullscreen" aria-label="Toggle fullscreen">&#9974;</button>
-
   <div id="app">
+
+    <header class="app-header">
+      <button class="header-btn is-hidden" id="restartBtn" title="Change level" aria-label="Change level">&#8634;</button>
+      <div class="app-header-title">Pump It Up <span>trainer</span></div>
+      <button class="header-btn" id="fullscreenBtn" title="Toggle fullscreen" aria-label="Toggle fullscreen">&#9974;</button>
+    </header>
 
     <!-- SETUP SCREEN -->
     <section class="setup" id="setup">
-      <h1>Pump It Up <span>trainer</span></h1>
       <div class="field">
         <label for="startLevelInput">Start at level</label>
         <input type="number" id="startLevelInput" placeholder="e.g. 14" min="1" inputmode="numeric">
@@ -32,10 +35,13 @@
 
     <!-- PLAY SCREEN -->
     <section class="play" id="play" hidden>
-      <button class="restart-btn" id="restartBtn" title="Change level" aria-label="Change level">&#8634;</button>
-
       <button class="level-nav-btn level-nav-left" id="levelDownBtn" title="Decrease level" aria-label="Decrease level">&#8722;</button>
       <button class="level-nav-btn level-nav-right" id="levelUpBtn" title="Increase level" aria-label="Increase level">&#43;</button>
+
+      <div class="session-wrap">
+        <div class="eyebrow">Session Progress</div>
+        <div class="session-scroll" id="sessionScroll"></div>
+      </div>
 
       <div class="level-block">
         <div class="eyebrow">Level</div>
@@ -78,7 +84,6 @@
 
     <!-- NO DATA SCREEN -->
     <section class="no-data" id="noData" hidden>
-      <button class="restart-btn" id="restartBtnNoData" title="Change level" aria-label="Change level">&#8634;</button>
       <div class="eyebrow">Level</div>
       <div class="level-number no-data-level" id="noDataLevel">--</div>
       <p>No table entry for this level yet. Jump to a different level below, or add it via View / Edit Data on the setup screen.</p>
@@ -104,7 +109,7 @@
 
   </div>
 
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=19"></script>
 
 </body>
 </html>
