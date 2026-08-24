@@ -121,16 +121,6 @@ body{
   justify-content:center;
   gap:0.5em;
 }
-.eyebrow .tag{
-  font-size:0.68rem;
-  padding:0.15em 0.55em;
-  border-radius:999px;
-  background:var(--bg-panel-2);
-  color:var(--text-mid);
-  letter-spacing:0.1em;
-  border:1px solid var(--line);
-}
-
 /* ---------- number blocks with splash burst ---------- */
 .number-wrap{
   position:relative;
@@ -382,60 +372,6 @@ body{
 
 .attempts-spacer{
   flex:0.4;
-}
-
-.ladder-wrap{
-  padding:0 1rem 0;
-}
-.ladder{
-  display:flex;
-  align-items:flex-end;
-  gap:0.4rem;
-  overflow-x:auto;
-  padding:0.6rem 0.2rem;
-  scrollbar-width:none;
-}
-.ladder::-webkit-scrollbar{display:none;}
-.ladder-step{
-  flex:0 0 auto;
-  font-family:var(--font-mono);
-  font-variant-numeric:tabular-nums;
-  text-align:center;
-  padding:0.6rem 0.9rem;
-  border-radius:10px;
-  border:1px solid var(--line);
-  background:var(--bg-panel);
-  color:var(--text-low);
-  font-size:1.5rem;
-  font-weight:600;
-  position:relative;
-  transition:transform 200ms ease;
-}
-.ladder-step .fail-tag{
-  display:block;
-  font-size:0.72rem;
-  letter-spacing:0.1em;
-  color:var(--red);
-  margin-top:0.15rem;
-}
-.ladder-step.past-fail{
-  color:var(--text-low);
-  border-color:rgba(255,71,87,0.25);
-}
-.ladder-step.past-fail .score-value{
-  text-decoration:line-through;
-}
-.ladder-step.current{
-  color:var(--bg-void);
-  background:var(--cyan);
-  border-color:var(--cyan);
-  font-size:1.9rem;
-  padding:0.8rem 1.2rem;
-  box-shadow:0 0 18px var(--cyan-dim);
-  transform:translateY(-2px);
-}
-.ladder-step.future{
-  color:var(--text-mid);
 }
 
 .target-block{

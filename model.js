@@ -129,6 +129,13 @@
     return levelKeys;
   }
 
+  function canDecreaseLevel(level){
+    if (level === null || level <= 1) return false;
+    var lowestLevel = levelKeys && levelKeys.length ? levelKeys[0] : null;
+    if (lowestLevel !== null && level <= lowestLevel) return false;
+    return true;
+  }
+
   // A level with no explicit table entry inherits from the nearest lower level that has one.
   function getConfig(level){
     if (!levelKeys) return undefined;
@@ -184,6 +191,7 @@
     clearLevelData: clearLevelData,
     getActiveRawData: getActiveRawData,
     getLevelKeys: getLevelKeys,
+    canDecreaseLevel: canDecreaseLevel,
     getConfig: getConfig,
     resolveScores: resolveScores,
     createDefaultLevelData: createDefaultLevelData
