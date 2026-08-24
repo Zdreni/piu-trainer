@@ -306,6 +306,29 @@
     restartBtn.classList.toggle("is-hidden", name === "setup");
   }
 
+  // Resolves a level's raw "scores" config into absolute target values. A negative
+  // entry means "subtract this much from the previous target" rather than being an
+  // absolute score. If the raw array's last entry is negative, that same gap keeps
+  // getting subtracted for every attempt beyond the array (unlimited fails).
+  function resolveScores(rawScores, count){
+    var resolved = [];
+    var prev = null;
+    for (var i = 0; i < rawScores.length; i++){
+      var v = rawScores[i];
+      var value = (v < 0 && prev !== null) ? prev + v : v;
+      resolved.push(value);
+      prev = value;
+    }
+    var lastRaw = rawScores[rawScores.length - 1];
+    if (lastRaw < 0){
+      while (resolved.length < count){
+        prev = prev + lastRaw;
+        resolved.push(prev);
+      }
+    }
+    return resolved;
+  }
+
   function buildLadder(scores, attemptIndex){
     ladderEl.innerHTML = "";
     var currentStepEl = null;
@@ -476,10 +499,12 @@
       return;
     }
 
-    var scores = config.scores || [];
-    if (state.attemptIndex > scores.length - 1) state.attemptIndex = scores.length - 1;
+    var rawScores = config.scores || [];
+    var extendable = rawScores.length > 0 && rawScores[rawScores.length - 1] < 0;
+    if (!extendable && state.attemptIndex > rawScores.length - 1) state.attemptIndex = rawScores.length - 1;
     if (state.attemptIndex < 0) state.attemptIndex = 0;
 
+    var scores = resolveScores(rawScores, Math.max(rawScores.length, state.attemptIndex + (extendable ? 2 : 1)));
     var target = scores[state.attemptIndex];
     var newTargetText = formatScore(target);
     var targetChanged = lastTargetText !== null && newTargetText !== lastTargetText;
@@ -569,9 +594,10 @@
   failBtn.addEventListener("click", function(){
     var config = getConfig(state.level);
     if (!config) return;
-    var scores = config.scores || [];
+    var rawScores = config.scores || [];
+    var extendable = rawScores.length > 0 && rawScores[rawScores.length - 1] < 0;
     resolveSessionTry(false);
-    if (state.attemptIndex < scores.length - 1) state.attemptIndex += 1;
+    if (extendable || state.attemptIndex < rawScores.length - 1) state.attemptIndex += 1;
     render();
   });
 
