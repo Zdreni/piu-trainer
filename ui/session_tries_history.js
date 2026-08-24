@@ -5,42 +5,76 @@
 
   var sessionScrollEl = document.getElementById("sessionScroll");
 
-  var lastSessionLevel = null;
+  // Tries are grouped into one box per level: a header naming the level, and a
+  // row of small cells (one per try) underneath. The box for the level currently
+  // being played is reused across renders — only a level change opens a new one.
+  var currentGroupEl = null;
+  var currentGroupLevel = null;
+  var currentGroupCellsEl = null;
 
-  // The session-progress strip always ends in one "pending" cell: the level/target
-  // the user is about to try right now, inverted yellow with an empty footer (so it
+  // The session-progress strip always ends in one "pending" cell: the target the
+  // user is about to try right now, inverted yellow with an empty footer (so it
   // still matches the height of resolved cells). It's created once and then just
   // updated in place as the user browses levels — only an actual Pass/Fail "resolves"
   // it into a permanent, footer-tagged cell and opens a fresh pending cell for the
   // next attempt.
   var pendingCellEl = null;
-  var pendingHeadEl = null;
   var pendingScoreEl = null;
   var pendingStatusEl = null;
 
+  function ensureGroup(level){
+    if (currentGroupCellsEl && currentGroupLevel === level) return currentGroupCellsEl;
+
+    var groupEl = document.createElement("div");
+    groupEl.className = "tries-sequence";
+
+    var headEl = document.createElement("div");
+    headEl.className = "tries-sequence-head";
+    headEl.textContent = level;
+
+    var cellsEl = document.createElement("div");
+    cellsEl.className = "tries-sequence-cells";
+
+    groupEl.appendChild(headEl);
+    groupEl.appendChild(cellsEl);
+    sessionScrollEl.appendChild(groupEl);
+
+    currentGroupEl = groupEl;
+    currentGroupLevel = level;
+    currentGroupCellsEl = cellsEl;
+    return cellsEl;
+  }
+
   function showPending(level, targetScore){
     if (!pendingCellEl){
-      pendingCellEl = document.createElement("div");
-      pendingCellEl.className = "session-cell pending";
+      var cellsEl = ensureGroup(level);
 
-      pendingHeadEl = document.createElement("div");
-      pendingHeadEl.className = "session-cell-head";
+      pendingCellEl = document.createElement("div");
+      pendingCellEl.className = "try-cell pending";
 
       pendingScoreEl = document.createElement("div");
-      pendingScoreEl.className = "session-cell-score";
+      pendingScoreEl.className = "try-cell-score";
 
       pendingStatusEl = document.createElement("div");
-      pendingStatusEl.className = "session-cell-status";
+      pendingStatusEl.className = "try-cell-status";
       pendingStatusEl.textContent = "";
 
-      pendingCellEl.appendChild(pendingHeadEl);
       pendingCellEl.appendChild(pendingScoreEl);
       pendingCellEl.appendChild(pendingStatusEl);
-      sessionScrollEl.appendChild(pendingCellEl);
+      cellsEl.appendChild(pendingCellEl);
+    } else if (level !== currentGroupLevel){
+      // User browsed to a different level before resolving the pending try:
+      // relocate it into that level's box, opening one if needed, and drop
+      // the old box if it's left empty behind it.
+      var oldGroupEl = currentGroupEl;
+      var oldCellsEl = currentGroupCellsEl;
+      var newCellsEl = ensureGroup(level);
+      newCellsEl.appendChild(pendingCellEl);
+      if (oldCellsEl && !oldCellsEl.children.length && oldGroupEl && oldGroupEl.parentNode){
+        oldGroupEl.parentNode.removeChild(oldGroupEl);
+      }
     }
 
-    pendingHeadEl.classList.toggle("level-changed", level !== lastSessionLevel);
-    pendingHeadEl.textContent = level;
     pendingScoreEl.textContent = UiTools.formatScore(targetScore);
 
     sessionScrollEl.scrollLeft = sessionScrollEl.scrollWidth;
@@ -50,26 +84,25 @@
   function resolveTry(level, success){
     if (!pendingCellEl) return;
 
-    lastSessionLevel = level;
     pendingCellEl.classList.remove("pending");
     pendingCellEl.classList.add(success ? "pass" : "fail");
 
     pendingStatusEl.textContent = success ? "Done" : "Fail";
-    pendingStatusEl.classList.remove("session-cell-status");
+    pendingStatusEl.classList.remove("try-cell-status");
     void pendingStatusEl.offsetWidth; // reflow to restart the entrance animation
-    pendingStatusEl.classList.add("session-cell-status");
+    pendingStatusEl.classList.add("try-cell-status");
 
     pendingCellEl = null;
-    pendingHeadEl = null;
     pendingScoreEl = null;
     pendingStatusEl = null;
   }
 
   function reset(){
     sessionScrollEl.innerHTML = "";
-    lastSessionLevel = null;
+    currentGroupEl = null;
+    currentGroupLevel = null;
+    currentGroupCellsEl = null;
     pendingCellEl = null;
-    pendingHeadEl = null;
     pendingScoreEl = null;
     pendingStatusEl = null;
   }
