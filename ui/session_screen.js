@@ -31,8 +31,6 @@
 
   var failBtn = document.getElementById("failBtn");
   var passBtn = document.getElementById("passBtn");
-  var failBtnScoreEl = document.getElementById("failBtnScore");
-  var passBtnScoreEl = document.getElementById("passBtnScore");
   var levelDownBtn = document.getElementById("levelDownBtn");
   var levelUpBtn = document.getElementById("levelUpBtn");
 
@@ -166,9 +164,6 @@
     } else {
       targetNumberEl.innerHTML = UiTools.formatScoreHtml(target);
     }
-    failBtnScoreEl.innerHTML = "&lt; " + UiTools.formatScoreHtml(target);
-    passBtnScoreEl.innerHTML = "&ge; " + UiTools.formatScoreHtml(target);
-
     window.showScreen("play");
 
     var animateLevel = levelChanged || forceAnim;

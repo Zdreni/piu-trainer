@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Pump It Up trainer</title>
-<link rel="stylesheet" href="level-controller.css?v=71">
+<link rel="stylesheet" href="level-controller.css?v=76">
 </head>
 <body>
 
@@ -68,12 +68,12 @@
       <div class="target-block">
         <div class="eyebrow">Try to get score</div>
         <div class="target-row">
-          <button class="btn btn-fail" id="failBtn"><span class="btn-label"><span class="btn-top">Fail</span><br><span class="btn-score" id="failBtnScore">&lt; --</span></span></button>
+          <button class="btn btn-fail" id="failBtn"><span class="btn-symbol">&lt;</span><span class="btn-footer">fail</span></button>
           <div class="number-wrap">
             <div class="burst cyan" id="targetBurst"></div>
             <div class="target-number" id="targetNumber" aria-live="polite">--</div>
           </div>
-          <button class="btn btn-pass" id="passBtn"><span class="btn-label"><span class="btn-top">Pass</span><br><span class="btn-score" id="passBtnScore">&ge; --</span></span></button>
+          <button class="btn btn-pass" id="passBtn"><span class="btn-symbol">&ge;</span><span class="btn-footer">pass</span></button>
         </div>
       </div>
     </section>
@@ -108,7 +108,7 @@
   <script src="model.js?v=6"></script>
   <script src="ui/tools.js?v=2"></script>
   <script src="ui/session_tries_history.js?v=8"></script>
-  <script src="ui/session_screen.js?v=20"></script>
+  <script src="ui/session_screen.js?v=21"></script>
   <script src="ui/start_screen.js?v=3"></script>
   <script src="ui/data_modal.js?v=2"></script>
   <script src="app.js?v=31"></script>
