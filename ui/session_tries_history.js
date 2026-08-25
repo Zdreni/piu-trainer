@@ -91,7 +91,7 @@
       groupCells(pendingGroupEl).appendChild(pendingCellEl);
     }
 
-    pendingScoreEl.textContent = UiTools.formatScore(targetScore);
+    pendingScoreEl.innerHTML = UiTools.formatScoreHtml(targetScore);
     pendingLevel = level;
     pendingTarget = targetScore;
 

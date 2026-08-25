@@ -3,8 +3,18 @@
 
   var countTokens = new WeakMap();
 
-  function formatScore(n){
+  function formatScoreValue(n){
     return Number(n).toLocaleString("en-US");
+  }
+
+  function formatScore(n){
+    return formatScoreValue(n) + "k";
+  }
+
+  // Same value, but with the "k" suffix wrapped in its own span so it can be
+  // styled as a dimmed version of the surrounding value's color.
+  function formatScoreHtml(n){
+    return formatScoreValue(n) + '<span class="score-suffix">k</span>';
   }
 
   function burstGlow(burstEl){
@@ -93,7 +103,7 @@
     to = Number(to);
 
     if (!Number.isFinite(from) || from === to){
-      el.textContent = formatScore(to);
+      el.innerHTML = formatScoreHtml(to);
       return;
     }
 
@@ -104,7 +114,7 @@
       var progress = Math.min((timestamp - startTime) / duration, 1);
       var eased = 1 - Math.pow(1 - progress, 3);
       var current = Math.round(from + (to - from) * eased);
-      el.textContent = formatScore(current);
+      el.innerHTML = formatScoreHtml(current);
       if (progress < 1){
         requestAnimationFrame(step);
       }
@@ -114,6 +124,7 @@
 
   window.UiTools = {
     formatScore: formatScore,
+    formatScoreHtml: formatScoreHtml,
     burstGlow: burstGlow,
     splash: splash,
     wheelText: wheelText,

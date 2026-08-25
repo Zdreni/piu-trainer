@@ -3,14 +3,19 @@
   --bg-panel:#12151f;
   --bg-panel-2:#171b28;
   --line:rgba(255,255,255,0.08);
-  --pink:#ff3d7f;
-  --pink-dim:rgba(255,61,127,0.35);
+  --brand-accent:#ff3d7f;
+  --pink:#c1121f;
+  --pink-dim:rgba(193,18,31,0.35);
   --cyan:#2fe6d8;
   --cyan-dim:rgba(47,230,216,0.35);
+  --yellow:#ff8a3d;
+  --yellow-dim:rgba(255,138,61,0.35);
   --amber:#ffb648;
   --green:#5ce694;
   --green-dim:rgba(92,230,148,0.35);
   --green-pale:#a8f0c4;
+  --doubles:#2f9e5a;
+  --doubles-dim:rgba(47,158,90,0.35);
   --red:#ff4757;
   --text-hi:#f5f6fa;
   --text-mid:#9aa0b4;
@@ -72,7 +77,7 @@ body{
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.app-header-title span{color:var(--pink);}
+.app-header-title span{color:var(--brand-accent);}
 .header-btn{
   width:2.4rem;
   height:2.4rem;
@@ -122,8 +127,8 @@ body{
   z-index:-1;
 }
 .burst.pink{background:radial-gradient(circle, var(--pink-dim) 0%, transparent 68%);}
-.burst.pink.type-doubles{background:radial-gradient(circle, var(--green-dim) 0%, transparent 68%);}
-.burst.cyan{background:radial-gradient(circle, var(--cyan-dim) 0%, transparent 68%);}
+.burst.pink.type-doubles{background:radial-gradient(circle, var(--doubles-dim) 0%, transparent 68%);}
+.burst.cyan{background:radial-gradient(circle, var(--yellow-dim) 0%, transparent 68%);}
 .burst.active{animation:burst 600ms ease-out;}
 @keyframes burst{
   0%{opacity:0.65; transform:translate(-50%,-50%) scale(0.35);}
@@ -161,15 +166,24 @@ body{
   font-size:clamp(6.2rem, 32vw, 11.5rem);
   line-height:1;
   letter-spacing:-0.03em;
-  background:linear-gradient(180deg, #ffffff 0%, var(--pink) 120%);
+  background:linear-gradient(180deg, #f0b3ae 0%, var(--pink) 120%);
   -webkit-background-clip:text;
   background-clip:text;
   color:transparent;
   filter:drop-shadow(0 0 22px var(--pink-dim));
 }
 .level-number.type-doubles{
-  background-image:linear-gradient(180deg, #ffffff 0%, var(--green) 120%);
-  filter:drop-shadow(0 0 22px var(--green-dim));
+  background-image:linear-gradient(180deg, #b8e8c8 0%, var(--doubles) 120%);
+  filter:drop-shadow(0 0 22px var(--doubles-dim));
+}
+
+/* The "k" suffix on a score is a dimmed version of whatever color the value
+   itself is drawn in — plain elements just dim via opacity (their color is
+   inherited), but background-clip:text elements paint child text transparent
+   too, so those override with an explicit dimmed color instead. */
+.score-suffix{
+  opacity:0.5;
+  font-size:0.7em;
 }
 
 .target-number{
@@ -179,11 +193,18 @@ body{
   font-size:clamp(4.8rem, 24vw, 8rem);
   line-height:1;
   letter-spacing:-0.02em;
-  background:linear-gradient(180deg, #ffffff 0%, var(--cyan) 120%);
+  background:linear-gradient(180deg, #f0b48a 0%, var(--yellow) 120%);
   -webkit-background-clip:text;
   background-clip:text;
   color:transparent;
-  filter:drop-shadow(0 0 16px var(--cyan-dim));
+  filter:drop-shadow(0 0 16px var(--yellow-dim));
+}
+.target-number .score-suffix{
+  /* This element's own drop-shadow glow bleeds onto the suffix from the
+     adjacent digit, so opacity alone barely reads — use a genuinely
+     darker, flat color here instead of counting on alpha blending. */
+  color:#7a4020;
+  opacity:1;
 }
 
 /* ---------- layout sections ---------- */
@@ -234,7 +255,7 @@ body{
 
 /* Each button's unpressed text matches the color its background turns when pressed. */
 #modeSinglesBtn{color:var(--pink);}
-#modeDoublesBtn{color:var(--green);}
+#modeDoublesBtn{color:var(--doubles);}
 #modeRandomBtn{color:var(--cyan);}
 
 .mode-btn.is-active{
@@ -249,8 +270,8 @@ body{
   color:var(--text-hi);
 }
 #modeDoublesBtn.is-active{
-  background:linear-gradient(180deg, var(--green) 0%, rgba(92,230,148,0.55) 150%);
-  border-color:var(--green);
+  background:linear-gradient(180deg, var(--doubles) 0%, rgba(47,158,90,0.55) 150%);
+  border-color:var(--doubles);
   color:var(--text-hi);
 }
 
@@ -303,7 +324,7 @@ body{
   padding:0.25rem 0;
 }
 .tries-sequence-head.type-doubles{
-  color:var(--green);
+  color:var(--doubles);
 }
 .tries-sequence-cells{
   display:flex;

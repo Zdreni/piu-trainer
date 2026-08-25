@@ -171,6 +171,7 @@
     var avValue = currentAv(config);
     var newAvText = avValue === undefined ? "N/A" : UiTools.formatScore(avValue);
     var avTextChanged = lastAvText !== null && newAvText !== lastAvText;
+    recAvBoxEl.hidden = avValue === undefined;
     if (avValue === undefined){
       recAvEl.textContent = "N/A";
       recAvEl.classList.add("is-na");
@@ -181,7 +182,7 @@
         var avFrom = (lastAvValue !== null && lastAvValue !== undefined) ? lastAvValue : 0;
         UiTools.animateCount(recAvEl, avFrom, avValue, 600);
       } else {
-        recAvEl.textContent = newAvText;
+        recAvEl.innerHTML = UiTools.formatScoreHtml(avValue);
       }
       // Until a chart's actually been tried there's no baseline to compare
       // against yet, so stay highlighted rather than defaulting to dimmed.
@@ -197,10 +198,10 @@
     if (targetChanged || levelChanged || forceAnim){
       UiTools.animateCount(targetNumberEl, lastTargetValue !== null ? lastTargetValue : 0, target, 600);
     } else {
-      targetNumberEl.textContent = newTargetText;
+      targetNumberEl.innerHTML = UiTools.formatScoreHtml(target);
     }
-    failBtnScoreEl.textContent = "< " + newTargetText;
-    passBtnScoreEl.textContent = "≥ " + newTargetText;
+    failBtnScoreEl.innerHTML = "&lt; " + UiTools.formatScoreHtml(target);
+    passBtnScoreEl.innerHTML = "&ge; " + UiTools.formatScoreHtml(target);
 
     window.showScreen("play");
 
