@@ -58,6 +58,7 @@
     function clearAllData(){
       LevelModel.clearLevelData();
       LevelModel.clearWarmupLevel();
+      LevelModel.clearSessionState();
       hooks.warmupLevelInput.value = "";
       closeDataModal();
       hooks.resetToSetup();

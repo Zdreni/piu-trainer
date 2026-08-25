@@ -77,6 +77,18 @@
     levelDownBtn.classList.toggle("is-disabled", !LevelModel.canDecreaseLevel(state.level));
   }
 
+  function persistSession(){
+    if (state.level === null){
+      LevelModel.clearSessionState();
+      return;
+    }
+    LevelModel.saveSessionState({
+      level: state.level,
+      attemptIndex: state.attemptIndex,
+      tries: SessionTriesHistory.getTries()
+    });
+  }
+
   function render(){
     var config = LevelModel.getConfig(state.level);
 
@@ -92,6 +104,7 @@
       lastTargetText = null;
       lastTargetValue = null;
       updateLevelNavButtons();
+      persistSession();
       return;
     }
 
@@ -136,6 +149,7 @@
 
     updateLevelNavButtons();
     positionLevelNavButtons();
+    persistSession();
   }
 
   function startAt(level){
@@ -162,7 +176,20 @@
     lastAvSinglesValue = null;
     lastAvDoublesValue = null;
     SessionTriesHistory.reset();
+    LevelModel.clearSessionState();
     window.showScreen("setup");
+  }
+
+  // Resumes a session saved before the last page reload: restores the tries
+  // strip, then renders as usual (no animation, since there's no previous
+  // on-screen value to animate from).
+  function resume(savedState){
+    state.level = savedState.level;
+    state.attemptIndex = savedState.attemptIndex;
+    state.avSinglesChanged = false;
+    state.avDoublesChanged = false;
+    SessionTriesHistory.restore(savedState.tries);
+    render();
   }
 
   // ---- events ----
@@ -204,6 +231,7 @@
 
   window.TrainingSession = {
     start: startAt,
+    resume: resume,
     render: render,
     getCurrentLevel: function(){ return state.level; },
     resetSessionHistory: SessionTriesHistory.reset,

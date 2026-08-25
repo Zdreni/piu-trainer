@@ -3,6 +3,7 @@
 
   var STORAGE_KEY = "piuTrainerLevelData";
   var WARMUP_LEVEL_KEY = "piuTrainerWarmupLevel";
+  var SESSION_KEY = "piuTrainerSessionState";
 
   // Merges each explicitly-listed level's config forward onto the next
   // (so a level entry only needs to specify what changed since the one below it).
@@ -91,6 +92,35 @@
 
   function clearWarmupLevel(){
     try { localStorage.removeItem(WARMUP_LEVEL_KEY); } catch (e){}
+  }
+
+  // The in-progress training session (current level, attempt, and resolved tries)
+  // so a page reload can resume exactly where the user left off.
+  function readSessionState(){
+    try {
+      var raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return null;
+      if (typeof parsed.level !== "number" || !Number.isFinite(parsed.level) || parsed.level < 1) return null;
+      if (typeof parsed.attemptIndex !== "number" || !Number.isFinite(parsed.attemptIndex) || parsed.attemptIndex < 0) return null;
+      if (!Array.isArray(parsed.tries)) return null;
+      var triesOk = parsed.tries.every(function(t){
+        return t && typeof t.level === "number" && typeof t.target === "number" && typeof t.success === "boolean";
+      });
+      if (!triesOk) return null;
+      return parsed;
+    } catch (e){
+      return null;
+    }
+  }
+
+  function saveSessionState(state){
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify(state)); } catch (e){}
+  }
+
+  function clearSessionState(){
+    try { localStorage.removeItem(SESSION_KEY); } catch (e){}
   }
 
   var activeRawData = null;
@@ -187,6 +217,9 @@
     readStoredWarmupLevel: readStoredWarmupLevel,
     saveWarmupLevel: saveWarmupLevel,
     clearWarmupLevel: clearWarmupLevel,
+    readSessionState: readSessionState,
+    saveSessionState: saveSessionState,
+    clearSessionState: clearSessionState,
     saveLevelData: saveLevelData,
     clearLevelData: clearLevelData,
     getActiveRawData: getActiveRawData,

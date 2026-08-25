@@ -21,6 +21,12 @@
   var pendingCellEl = null;
   var pendingScoreEl = null;
   var pendingStatusEl = null;
+  var pendingLevel = null;
+  var pendingTarget = null;
+
+  // Resolved tries for the current session, in order, so the strip can be
+  // rebuilt after a page reload.
+  var triesLog = [];
 
   function ensureGroup(level){
     if (currentGroupCellsEl && currentGroupLevel === level) return currentGroupCellsEl;
@@ -76,6 +82,8 @@
     }
 
     pendingScoreEl.textContent = UiTools.formatScore(targetScore);
+    pendingLevel = level;
+    pendingTarget = targetScore;
 
     sessionScrollEl.scrollLeft = sessionScrollEl.scrollWidth;
   }
@@ -92,9 +100,13 @@
     void pendingStatusEl.offsetWidth; // reflow to restart the entrance animation
     pendingStatusEl.classList.add("try-cell-status");
 
+    triesLog.push({ level: pendingLevel, target: pendingTarget, success: success });
+
     pendingCellEl = null;
     pendingScoreEl = null;
     pendingStatusEl = null;
+    pendingLevel = null;
+    pendingTarget = null;
   }
 
   function reset(){
@@ -105,6 +117,22 @@
     pendingCellEl = null;
     pendingScoreEl = null;
     pendingStatusEl = null;
+    pendingLevel = null;
+    pendingTarget = null;
+    triesLog = [];
+  }
+
+  function getTries(){
+    return triesLog.slice();
+  }
+
+  // Rebuilds the strip from a saved list of resolved tries (e.g. after a page reload).
+  function restore(tries){
+    reset();
+    tries.forEach(function(t){
+      showPending(t.level, t.target);
+      resolveTry(t.level, t.success);
+    });
   }
 
   // Touch already scrolls this natively; mouse/pen don't support click-drag on an
@@ -141,6 +169,8 @@
   window.SessionTriesHistory = {
     showPending: showPending,
     resolveTry: resolveTry,
-    reset: reset
+    reset: reset,
+    getTries: getTries,
+    restore: restore
   };
 })(window);
