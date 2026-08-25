@@ -190,6 +190,7 @@
     state.avDoublesChanged = false;
     SessionTriesHistory.restore(savedState.tries);
     render();
+    SessionTriesHistory.scrollToEnd();
   }
 
   // ---- events ----

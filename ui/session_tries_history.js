@@ -126,6 +126,10 @@
     return triesLog.slice();
   }
 
+  function scrollToEnd(){
+    sessionScrollEl.scrollLeft = sessionScrollEl.scrollWidth;
+  }
+
   // Rebuilds the strip from a saved list of resolved tries (e.g. after a page reload).
   function restore(tries){
     reset();
@@ -171,6 +175,7 @@
     resolveTry: resolveTry,
     reset: reset,
     getTries: getTries,
-    restore: restore
+    restore: restore,
+    scrollToEnd: scrollToEnd
   };
 })(window);
