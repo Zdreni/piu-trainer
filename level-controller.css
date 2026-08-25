@@ -28,26 +28,6 @@ body{
   -webkit-tap-highlight-color:transparent;
 }
 
-/* ---------- ambient scanline / lane background ---------- */
-.lanes{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:0;
-  opacity:0.05;
-  background-image:repeating-linear-gradient(
-    115deg,
-    var(--cyan) 0px,
-    var(--cyan) 2px,
-    transparent 2px,
-    transparent 64px
-  );
-  animation:laneScroll 14s linear infinite;
-}
-@keyframes laneScroll{
-  0%{background-position:0 0;}
-  100%{background-position:600px 300px;}
-}
 .vignette{
   position:fixed;
   inset:0;
@@ -214,7 +194,7 @@ body{
 .session-scroll{
   display:flex;
   align-items:center;
-  gap:calc(0.5rem / 1.5);
+  gap:0.9rem;
   overflow-x:auto;
   padding:0.5rem 0.2rem;
   scrollbar-width:none;
@@ -236,9 +216,9 @@ body{
   align-items:center;
   gap:0.2rem;
   border-radius:12px;
-  border:1px solid var(--line);
-  background:var(--bg-panel);
-  padding:0.4rem 0.45rem;
+  border:1px solid rgba(255,255,255,0.05);
+  background:#1d2130;
+  padding:0.2rem 0.25rem;
   opacity:0;
   transform:scale(0.7) translateY(6px);
   animation:sessionCellIn 320ms cubic-bezier(0.22,0.61,0.36,1) forwards;
@@ -254,6 +234,7 @@ body{
   color:var(--text-hi);
   line-height:1;
   text-align:center;
+  padding:0.25rem 0;
 }
 .tries-sequence-cells{
   display:flex;
@@ -265,10 +246,10 @@ body{
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:0.25rem;
-  min-width:2.6rem;
-  min-height:2.4rem;
-  padding:0.35rem 0.6rem;
+  justify-content:space-between;
+  min-width:3rem;
+  min-height:2.75rem;
+  padding:0.5rem 0.7rem 0.3rem;
   border-radius:8px;
   border:1px solid var(--line);
   background:var(--bg-void);
@@ -692,7 +673,6 @@ body{
 [hidden]{display:none !important;}
 
 @media (prefers-reduced-motion: reduce){
-  .lanes{animation:none;}
   .splash-pop{animation:none;}
   .burst.active{animation:none;}
   .tries-sequence{animation:none; opacity:1; transform:none;}
