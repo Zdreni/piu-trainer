@@ -237,4 +237,179 @@
     resolveScores: resolveScores,
     createDefaultLevelData: createDefaultLevelData
   };
+
+  // ---- Training session state ----
+  // levels tracks singles/doubles/random progress independently. mode is which
+  // one is currently being played; currentType is the S/D letter shown before
+  // the level number (fixed for singles/doubles, rolled for random).
+  var sessionState = {
+    mode: null,
+    currentType: null,
+    levels: { singles: null, doubles: null, random: null },
+    attemptIndex: 0
+  };
+  // The AV of the last chart actually tried (pass or fail). Navigating around
+  // (level up/down, mode switch, reroll) compares against this without moving
+  // it, so browsing back to a level you haven't re-tried doesn't re-highlight.
+  var avBaseline;
+
+  function currentLevel(){
+    return sessionState.mode === null ? null : sessionState.levels[sessionState.mode];
+  }
+
+  function currentTypeLetter(){
+    if (sessionState.mode === "singles") return "S";
+    if (sessionState.mode === "doubles") return "D";
+    return sessionState.currentType;
+  }
+
+  function currentLabel(){
+    var level = currentLevel();
+    return level === null ? "--" : currentTypeLetter() + level;
+  }
+
+  // The recommended AV is whichever of the level's avSingles/avDoubles matches
+  // the type currently being played.
+  function currentAv(config){
+    if (!config) return undefined;
+    return currentTypeLetter() === "S" ? config.avSingles : config.avDoubles;
+  }
+
+  function getMode(){
+    return sessionState.mode;
+  }
+
+  function getAttemptIndex(){
+    return sessionState.attemptIndex;
+  }
+
+  function getAvBaseline(){
+    return avBaseline;
+  }
+
+  function setAvBaseline(value){
+    avBaseline = value;
+  }
+
+  // Clamps attemptIndex into the valid range for a level's raw scores table
+  // (called before resolving scores for render, since data edits or track
+  // switches can leave it pointing past a shorter, non-extendable table).
+  function clampAttemptIndex(rawScores){
+    var extendable = rawScores.length > 0 && rawScores[rawScores.length - 1] < 0;
+    if (!extendable && sessionState.attemptIndex > rawScores.length - 1) sessionState.attemptIndex = rawScores.length - 1;
+    if (sessionState.attemptIndex < 0) sessionState.attemptIndex = 0;
+  }
+
+  // Moves the current mode's level track to a new level (level up/down, jump,
+  // pass). Does not touch the other tracks. In random mode, moving to a
+  // different level rerolls the type too.
+  function startAt(level){
+    sessionState.levels[sessionState.mode] = level;
+    sessionState.attemptIndex = 0;
+    if (sessionState.mode === "random") sessionState.currentType = Math.random() < 0.5 ? "S" : "D";
+  }
+
+  // Switches which track (singles/doubles/random) is being played. Picks a
+  // fresh random type when entering random mode.
+  function switchMode(mode){
+    var prevMode = sessionState.mode;
+
+    // Entering random mode from a specific type continues at that type's level,
+    // rather than snapping to the random track's own (possibly stale) level.
+    if (mode === "random" && (prevMode === "singles" || prevMode === "doubles")){
+      sessionState.levels.random = sessionState.levels[prevMode];
+    }
+
+    sessionState.mode = mode;
+    sessionState.currentType = mode === "singles" ? "S" : mode === "doubles" ? "D" : (Math.random() < 0.5 ? "S" : "D");
+    sessionState.attemptIndex = 0;
+  }
+
+  // Rerolls the type within random mode, keeping the random track's level as-is.
+  function rerollRandom(){
+    sessionState.currentType = Math.random() < 0.5 ? "S" : "D";
+    sessionState.attemptIndex = 0;
+  }
+
+  // Begins a brand-new session at `level` for all three tracks (singles,
+  // doubles, random), defaulting to random mode.
+  function startSession(level){
+    sessionState.levels = { singles: level, doubles: level, random: level };
+    sessionState.mode = "random";
+    sessionState.currentType = Math.random() < 0.5 ? "S" : "D";
+    sessionState.attemptIndex = 0;
+    avBaseline = undefined;
+  }
+
+  // Clears all session state back to the setup screen's starting point.
+  function resetSession(){
+    sessionState.mode = null;
+    sessionState.currentType = null;
+    sessionState.levels = { singles: null, doubles: null, random: null };
+    sessionState.attemptIndex = 0;
+    avBaseline = undefined;
+  }
+
+  // Restores session state saved before the last page reload.
+  function resumeSession(savedState){
+    sessionState.mode = savedState.mode;
+    sessionState.currentType = savedState.currentType;
+    sessionState.levels = savedState.levels;
+    sessionState.attemptIndex = savedState.attemptIndex;
+  }
+
+  // Records a pass on the current level: in random mode, bumps the other
+  // tracks forward if they haven't already passed this level, then advances
+  // the current track to the next level.
+  function recordPass(){
+    var level = currentLevel();
+    if (sessionState.mode === "random"){
+      var oldRandomLevel = sessionState.levels.random;
+      if (sessionState.levels.singles <= oldRandomLevel) sessionState.levels.singles += 1;
+      if (sessionState.levels.doubles <= oldRandomLevel) sessionState.levels.doubles += 1;
+    }
+    startAt(level + 1);
+  }
+
+  // Records a fail on the current level: advances the attempt index (if the
+  // level's score table has more entries or is open-ended), and rerolls the
+  // type in random mode.
+  function recordFail(config){
+    var rawScores = config.scores || [];
+    var extendable = rawScores.length > 0 && rawScores[rawScores.length - 1] < 0;
+    if (extendable || sessionState.attemptIndex < rawScores.length - 1) sessionState.attemptIndex += 1;
+    if (sessionState.mode === "random") sessionState.currentType = Math.random() < 0.5 ? "S" : "D";
+  }
+
+  // Snapshot used to persist session state to storage (paired with the tries
+  // history, which is tracked separately by SessionTriesHistory).
+  function getSnapshot(){
+    return {
+      mode: sessionState.mode,
+      currentType: sessionState.currentType,
+      levels: sessionState.levels,
+      attemptIndex: sessionState.attemptIndex
+    };
+  }
+
+  window.SessionModel = {
+    currentLevel: currentLevel,
+    currentTypeLetter: currentTypeLetter,
+    currentLabel: currentLabel,
+    currentAv: currentAv,
+    getMode: getMode,
+    getAttemptIndex: getAttemptIndex,
+    getAvBaseline: getAvBaseline,
+    setAvBaseline: setAvBaseline,
+    clampAttemptIndex: clampAttemptIndex,
+    startAt: startAt,
+    switchMode: switchMode,
+    rerollRandom: rerollRandom,
+    startSession: startSession,
+    resetSession: resetSession,
+    resumeSession: resumeSession,
+    recordPass: recordPass,
+    recordFail: recordFail,
+    getSnapshot: getSnapshot
+  };
 })(window);

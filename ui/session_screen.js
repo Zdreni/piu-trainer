@@ -2,28 +2,18 @@
   "use strict";
 
   var LevelModel = window.LevelModel;
+  var SessionModel = window.SessionModel;
   var UiTools = window.UiTools;
   var SessionTriesHistory = window.SessionTriesHistory;
 
-  // levels tracks singles/doubles/random progress independently. mode is which
-  // one is currently being played; currentType is the S/D letter shown before
-  // the level number (fixed for singles/doubles, rolled for random).
-  var state = {
-    mode: null,
-    currentType: null,
-    levels: { singles: null, doubles: null, random: null },
-    attemptIndex: 0
-  };
+  // Cached last-rendered display values, used only to decide which pieces
+  // need a change animation on the next render.
   var lastLevelText = null;
   var lastLevelValue = null;
   var lastTargetText = null;
   var lastTargetValue = null;
   var lastAvText = null;
   var lastAvValue = null;
-  // The AV of the last chart actually tried (pass or fail). Navigating around
-  // (level up/down, mode switch, reroll) compares against this without moving
-  // it, so browsing back to a level you haven't re-tried doesn't re-highlight.
-  var avBaseline;
 
   // ---- DOM refs ----
   var playEl = document.getElementById("play");
@@ -51,28 +41,6 @@
   var jumpBtn = document.getElementById("jumpBtn");
 
   // ---- helpers ----
-  function currentLevel(){
-    return state.mode === null ? null : state.levels[state.mode];
-  }
-
-  function currentTypeLetter(){
-    if (state.mode === "singles") return "S";
-    if (state.mode === "doubles") return "D";
-    return state.currentType;
-  }
-
-  function currentLabel(){
-    var level = currentLevel();
-    return level === null ? "--" : currentTypeLetter() + level;
-  }
-
-  // The recommended AV is whichever of the level's avSingles/avDoubles matches
-  // the type currently being played.
-  function currentAv(config){
-    if (!config) return undefined;
-    return currentTypeLetter() === "S" ? config.avSingles : config.avDoubles;
-  }
-
   function pulse(el){
     el.classList.remove("av-pulse");
     void el.offsetWidth; // reflow to restart animation
@@ -105,27 +73,24 @@
   }
 
   function updateLevelNavButtons(){
-    levelDownBtn.classList.toggle("is-disabled", !LevelModel.canDecreaseLevel(currentLevel()));
+    levelDownBtn.classList.toggle("is-disabled", !LevelModel.canDecreaseLevel(SessionModel.currentLevel()));
   }
 
   function updateModeButtons(){
-    modeSinglesBtn.classList.toggle("is-active", state.mode === "singles");
-    modeDoublesBtn.classList.toggle("is-active", state.mode === "doubles");
-    modeRandomBtn.classList.toggle("is-active", state.mode === "random");
+    var mode = SessionModel.getMode();
+    modeSinglesBtn.classList.toggle("is-active", mode === "singles");
+    modeDoublesBtn.classList.toggle("is-active", mode === "doubles");
+    modeRandomBtn.classList.toggle("is-active", mode === "random");
   }
 
   function persistSession(){
-    if (state.mode === null){
+    if (SessionModel.getMode() === null){
       LevelModel.clearSessionState();
       return;
     }
-    LevelModel.saveSessionState({
-      mode: state.mode,
-      currentType: state.currentType,
-      levels: state.levels,
-      attemptIndex: state.attemptIndex,
-      tries: SessionTriesHistory.getTries()
-    });
+    var payload = SessionModel.getSnapshot();
+    payload.tries = SessionTriesHistory.getTries();
+    LevelModel.saveSessionState(payload);
   }
 
   // forceAnim: plays every value's reveal animation even when its text isn't
@@ -134,13 +99,13 @@
   // session's first render (where there's no previous value to diff against,
   // but everything should still animate in rather than just appear).
   function render(forceAnim){
-    var level = currentLevel();
+    var level = SessionModel.currentLevel();
     var config = LevelModel.getConfig(level);
 
-    var newLevelText = currentLabel();
+    var newLevelText = SessionModel.currentLabel();
     var levelChanged = lastLevelText !== null && newLevelText !== lastLevelText;
-    var levelBaseClass = "level-number" + (currentTypeLetter() === "D" ? " type-doubles" : "");
-    levelBurstEl.classList.toggle("type-doubles", currentTypeLetter() === "D");
+    var levelBaseClass = "level-number" + (SessionModel.currentTypeLetter() === "D" ? " type-doubles" : "");
+    levelBurstEl.classList.toggle("type-doubles", SessionModel.currentTypeLetter() === "D");
 
     if (!config){
       levelNumberEl.className = levelBaseClass;
@@ -159,16 +124,16 @@
     }
 
     var rawScores = config.scores || [];
+    SessionModel.clampAttemptIndex(rawScores);
+    var attemptIndex = SessionModel.getAttemptIndex();
     var extendable = rawScores.length > 0 && rawScores[rawScores.length - 1] < 0;
-    if (!extendable && state.attemptIndex > rawScores.length - 1) state.attemptIndex = rawScores.length - 1;
-    if (state.attemptIndex < 0) state.attemptIndex = 0;
 
-    var scores = LevelModel.resolveScores(rawScores, Math.max(rawScores.length, state.attemptIndex + (extendable ? 2 : 1)));
-    var target = scores[state.attemptIndex];
+    var scores = LevelModel.resolveScores(rawScores, Math.max(rawScores.length, attemptIndex + (extendable ? 2 : 1)));
+    var target = scores[attemptIndex];
     var newTargetText = UiTools.formatScore(target);
     var targetChanged = lastTargetText !== null && newTargetText !== lastTargetText;
 
-    var avValue = currentAv(config);
+    var avValue = SessionModel.currentAv(config);
     var newAvText = avValue === undefined ? "N/A" : UiTools.formatScore(avValue);
     var avTextChanged = lastAvText !== null && newAvText !== lastAvText;
     recAvBoxEl.hidden = avValue === undefined;
@@ -186,6 +151,7 @@
       }
       // Until a chart's actually been tried there's no baseline to compare
       // against yet, so stay highlighted rather than defaulting to dimmed.
+      var avBaseline = SessionModel.getAvBaseline();
       var avHighlighted = avBaseline === undefined || avValue !== avBaseline;
       recAvEl.classList.toggle("is-unchanged", !avHighlighted);
       if (avTextChanged && avHighlighted) pulse(recAvEl);
@@ -230,63 +196,39 @@
   }
 
   // Moves the current mode's level track to a new level (level up/down, jump,
-  // pass). Does not touch the other tracks. In random mode, moving to a
-  // different level rerolls the type too.
+  // pass) and re-renders.
   function startAt(level){
-    state.levels[state.mode] = level;
-    state.attemptIndex = 0;
-    if (state.mode === "random") state.currentType = Math.random() < 0.5 ? "S" : "D";
+    SessionModel.startAt(level);
     render();
   }
 
-  // Switches which track (singles/doubles/random) is being played. Picks a
-  // fresh random type when entering random mode.
+  // Switches which track (singles/doubles/random) is being played and re-renders.
   function switchMode(mode){
-    var prevMode = state.mode;
-
-    // Entering random mode from a specific type continues at that type's level,
-    // rather than snapping to the random track's own (possibly stale) level.
-    if (mode === "random" && (prevMode === "singles" || prevMode === "doubles")){
-      state.levels.random = state.levels[prevMode];
-    }
-
-    state.mode = mode;
-    state.currentType = mode === "singles" ? "S" : mode === "doubles" ? "D" : (Math.random() < 0.5 ? "S" : "D");
-    state.attemptIndex = 0;
-
+    SessionModel.switchMode(mode);
     render(true);
   }
 
-  // Rerolls the type within random mode, keeping the random track's level as-is.
+  // Rerolls the type within random mode and re-renders.
   function rerollRandom(){
-    state.currentType = Math.random() < 0.5 ? "S" : "D";
-    state.attemptIndex = 0;
+    SessionModel.rerollRandom();
     render(true);
   }
 
   // Begins a brand-new session at `level` for all three tracks (singles,
   // doubles, random), defaulting to random mode.
   function startSession(level){
-    state.levels = { singles: level, doubles: level, random: level };
-    state.mode = "random";
-    state.currentType = Math.random() < 0.5 ? "S" : "D";
-    state.attemptIndex = 0;
-    avBaseline = undefined;
+    SessionModel.startSession(level);
     render(true);
   }
 
   function resetToSetup(){
-    state.mode = null;
-    state.currentType = null;
-    state.levels = { singles: null, doubles: null, random: null };
-    state.attemptIndex = 0;
+    SessionModel.resetSession();
     lastLevelText = null;
     lastLevelValue = null;
     lastTargetText = null;
     lastTargetValue = null;
     lastAvText = null;
     lastAvValue = null;
-    avBaseline = undefined;
     SessionTriesHistory.reset();
     LevelModel.clearSessionState();
     window.showScreen("setup");
@@ -296,10 +238,7 @@
   // strip, then renders as usual (no animation, since there's no previous
   // on-screen value to animate from).
   function resume(savedState){
-    state.mode = savedState.mode;
-    state.currentType = savedState.currentType;
-    state.levels = savedState.levels;
-    state.attemptIndex = savedState.attemptIndex;
+    SessionModel.resumeSession(savedState);
     SessionTriesHistory.restore(savedState.tries);
     render();
     SessionTriesHistory.scrollToEnd();
@@ -307,53 +246,44 @@
 
   // ---- events ----
   passBtn.addEventListener("click", function(){
-    var level = currentLevel();
-    avBaseline = currentAv(LevelModel.getConfig(level));
-    SessionTriesHistory.resolveTry(currentLabel(), true);
-
-    if (state.mode === "random"){
-      var oldRandomLevel = state.levels.random;
-      if (state.levels.singles <= oldRandomLevel) state.levels.singles += 1;
-      if (state.levels.doubles <= oldRandomLevel) state.levels.doubles += 1;
-    }
-
-    startAt(level + 1);
+    var level = SessionModel.currentLevel();
+    SessionModel.setAvBaseline(SessionModel.currentAv(LevelModel.getConfig(level)));
+    SessionTriesHistory.resolveTry(SessionModel.currentLabel(), true);
+    SessionModel.recordPass();
+    render();
   });
 
   failBtn.addEventListener("click", function(){
-    var config = LevelModel.getConfig(currentLevel());
+    var config = LevelModel.getConfig(SessionModel.currentLevel());
     if (!config) return;
-    avBaseline = currentAv(config);
-    var rawScores = config.scores || [];
-    var extendable = rawScores.length > 0 && rawScores[rawScores.length - 1] < 0;
-    SessionTriesHistory.resolveTry(currentLabel(), false);
-    if (extendable || state.attemptIndex < rawScores.length - 1) state.attemptIndex += 1;
-    if (state.mode === "random") state.currentType = Math.random() < 0.5 ? "S" : "D";
+    SessionModel.setAvBaseline(SessionModel.currentAv(config));
+    SessionTriesHistory.resolveTry(SessionModel.currentLabel(), false);
+    SessionModel.recordFail(config);
     render();
   });
 
   levelDownBtn.addEventListener("click", function(){
-    if (!LevelModel.canDecreaseLevel(currentLevel())) return;
-    startAt(currentLevel() - 1);
+    if (!LevelModel.canDecreaseLevel(SessionModel.currentLevel())) return;
+    startAt(SessionModel.currentLevel() - 1);
   });
 
   levelUpBtn.addEventListener("click", function(){
-    if (currentLevel() === null) return;
-    startAt(currentLevel() + 1);
+    if (SessionModel.currentLevel() === null) return;
+    startAt(SessionModel.currentLevel() + 1);
   });
 
   modeSinglesBtn.addEventListener("click", function(){
-    if (state.mode === "singles") return;
+    if (SessionModel.getMode() === "singles") return;
     switchMode("singles");
   });
 
   modeDoublesBtn.addEventListener("click", function(){
-    if (state.mode === "doubles") return;
+    if (SessionModel.getMode() === "doubles") return;
     switchMode("doubles");
   });
 
   modeRandomBtn.addEventListener("click", function(){
-    if (state.mode !== "random"){
+    if (SessionModel.getMode() !== "random"){
       switchMode("random");
     } else {
       rerollRandom();
@@ -376,7 +306,7 @@
     start: startSession,
     resume: resume,
     render: render,
-    getCurrentLevel: function(){ return currentLevel(); },
+    getCurrentLevel: SessionModel.currentLevel,
     resetSessionHistory: SessionTriesHistory.reset,
     resetToSetup: resetToSetup
   };
