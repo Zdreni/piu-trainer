@@ -17,6 +17,11 @@
     return formatScoreValue(n) + '<span class="score-suffix">k</span>';
   }
 
+  // AV (attack value) isn't a score, so no "k" suffix.
+  function formatAv(n){
+    return formatScoreValue(n);
+  }
+
   function burstGlow(burstEl){
     burstEl.classList.remove("active");
     void burstEl.offsetWidth; // reflow to restart animation
@@ -96,14 +101,15 @@
     }, 480);
   }
 
-  function animateCount(el, from, to, duration){
+  function animateCount(el, from, to, duration, formatHtml){
+    formatHtml = formatHtml || formatScoreHtml;
     var myId = (countTokens.get(el) || 0) + 1;
     countTokens.set(el, myId);
     from = Number(from);
     to = Number(to);
 
     if (!Number.isFinite(from) || from === to){
-      el.innerHTML = formatScoreHtml(to);
+      el.innerHTML = formatHtml(to);
       return;
     }
 
@@ -114,7 +120,7 @@
       var progress = Math.min((timestamp - startTime) / duration, 1);
       var eased = 1 - Math.pow(1 - progress, 3);
       var current = Math.round(from + (to - from) * eased);
-      el.innerHTML = formatScoreHtml(current);
+      el.innerHTML = formatHtml(current);
       if (progress < 1){
         requestAnimationFrame(step);
       }
@@ -125,6 +131,7 @@
   window.UiTools = {
     formatScore: formatScore,
     formatScoreHtml: formatScoreHtml,
+    formatAv: formatAv,
     burstGlow: burstGlow,
     splash: splash,
     wheelText: wheelText,

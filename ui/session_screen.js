@@ -134,7 +134,7 @@
     var targetChanged = lastTargetText !== null && newTargetText !== lastTargetText;
 
     var avValue = SessionModel.currentAv(config);
-    var newAvText = avValue === undefined ? "N/A" : UiTools.formatScore(avValue);
+    var newAvText = avValue === undefined ? "N/A" : UiTools.formatAv(avValue);
     var avTextChanged = lastAvText !== null && newAvText !== lastAvText;
     recAvBoxEl.hidden = avValue === undefined;
     if (avValue === undefined){
@@ -145,9 +145,9 @@
       recAvEl.classList.remove("is-na");
       if (avTextChanged || forceAnim){
         var avFrom = (lastAvValue !== null && lastAvValue !== undefined) ? lastAvValue : 0;
-        UiTools.animateCount(recAvEl, avFrom, avValue, 600);
+        UiTools.animateCount(recAvEl, avFrom, avValue, 600, UiTools.formatAv);
       } else {
-        recAvEl.innerHTML = UiTools.formatScoreHtml(avValue);
+        recAvEl.innerHTML = UiTools.formatAv(avValue);
       }
       // Until a chart's actually been tried there's no baseline to compare
       // against yet, so stay highlighted rather than defaulting to dimmed.
