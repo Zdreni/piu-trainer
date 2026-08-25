@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Pump It Up trainer</title>
-<link rel="stylesheet" href="level-controller.css?v=48">
+<link rel="stylesheet" href="level-controller.css?v=71">
 </head>
 <body>
 
@@ -45,28 +45,28 @@
       <div class="v-gap"></div>
 
       <div class="level-block">
-        <div class="eyebrow">Level</div>
+        <div class="eyebrow">Next chart</div>
+        <div class="mode-row">
+          <div class="mode-group">
+            <button type="button" class="mode-btn" id="modeSinglesBtn">Singles</button>
+            <button type="button" class="mode-btn" id="modeDoublesBtn">Doubles</button>
+          </div>
+          <button type="button" class="mode-btn" id="modeRandomBtn">Random</button>
+        </div>
         <div class="number-wrap">
           <div class="burst pink" id="levelBurst"></div>
           <div class="level-number" id="levelNumber" aria-live="polite">--</div>
         </div>
       </div>
 
-      <div class="mods-row">
-        <div class="mod-card">
-          <span class="mod-label">AV &middot; Singles</span>
-          <span class="mod-value" id="avSingles">&mdash;</span>
-        </div>
-        <div class="mod-card">
-          <span class="mod-label">AV &middot; Doubles</span>
-          <span class="mod-value" id="avDoubles">&mdash;</span>
-        </div>
+      <div class="rec-av">
+        <span class="rec-av-prefix">AV</span><span class="rec-av-value" id="recAv">&mdash;</span>
       </div>
 
       <div class="v-gap"></div>
 
       <div class="target-block">
-        <div class="eyebrow">Chart Target Score</div>
+        <div class="eyebrow">Try to get score</div>
         <div class="target-row">
           <button class="btn btn-fail" id="failBtn"><span class="btn-label"><span class="btn-top">Fail</span><br><span class="btn-score" id="failBtnScore">&lt; --</span></span></button>
           <div class="number-wrap">
@@ -105,11 +105,11 @@
 
   </div>
 
-  <script src="model.js?v=4"></script>
-  <script src="ui/tools.js?v=1"></script>
-  <script src="ui/session_tries_history.js?v=4"></script>
-  <script src="ui/session_screen.js?v=6"></script>
-  <script src="ui/start_screen.js?v=2"></script>
+  <script src="model.js?v=5"></script>
+  <script src="ui/tools.js?v=2"></script>
+  <script src="ui/session_tries_history.js?v=8"></script>
+  <script src="ui/session_screen.js?v=19"></script>
+  <script src="ui/start_screen.js?v=3"></script>
   <script src="ui/data_modal.js?v=2"></script>
   <script src="app.js?v=31"></script>
 

@@ -102,11 +102,19 @@
       if (!raw) return null;
       var parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== "object") return null;
-      if (typeof parsed.level !== "number" || !Number.isFinite(parsed.level) || parsed.level < 1) return null;
+      if (parsed.mode !== "singles" && parsed.mode !== "doubles" && parsed.mode !== "random") return null;
+      if (parsed.currentType !== "S" && parsed.currentType !== "D") return null;
+      var levels = parsed.levels;
+      if (!levels || typeof levels !== "object") return null;
+      var levelsOk = ["singles", "doubles", "random"].every(function(key){
+        var v = levels[key];
+        return typeof v === "number" && Number.isFinite(v) && v >= 1;
+      });
+      if (!levelsOk) return null;
       if (typeof parsed.attemptIndex !== "number" || !Number.isFinite(parsed.attemptIndex) || parsed.attemptIndex < 0) return null;
       if (!Array.isArray(parsed.tries)) return null;
       var triesOk = parsed.tries.every(function(t){
-        return t && typeof t.level === "number" && typeof t.target === "number" && typeof t.success === "boolean";
+        return t && typeof t.level === "string" && typeof t.target === "number" && typeof t.success === "boolean";
       });
       if (!triesOk) return null;
       return parsed;

@@ -6,11 +6,12 @@
   var sessionScrollEl = document.getElementById("sessionScroll");
 
   // Tries are grouped into one box per level: a header naming the level, and a
-  // row of small cells (one per try) underneath. The box for the level currently
-  // being played is reused across renders — only a level change opens a new one.
-  var currentGroupEl = null;
-  var currentGroupLevel = null;
-  var currentGroupCellsEl = null;
+  // row of small cells (one per try) underneath. A new try merges into the
+  // strip's last box if its level matches; otherwise it opens a new one. "Last"
+  // is read straight from the DOM (not a cached pointer) so that dropping an
+  // empty box (one that only ever held the not-yet-resolved pending cell)
+  // correctly reveals an earlier box for the same level as last again.
+  var pendingGroupEl = null; // the .tries-sequence the pending cell currently lives in
 
   // The session-progress strip always ends in one "pending" cell: the target the
   // user is about to try right now, inverted yellow with an empty footer (so it
@@ -28,14 +29,24 @@
   // rebuilt after a page reload.
   var triesLog = [];
 
+  function groupHead(groupEl){
+    return groupEl.querySelector(".tries-sequence-head").textContent;
+  }
+
+  function groupCells(groupEl){
+    return groupEl.querySelector(".tries-sequence-cells");
+  }
+
+  // Reuses the strip's last box if its level matches; opens a new one otherwise.
   function ensureGroup(level){
-    if (currentGroupCellsEl && currentGroupLevel === level) return currentGroupCellsEl;
+    var lastGroupEl = sessionScrollEl.lastElementChild;
+    if (lastGroupEl && groupHead(lastGroupEl) === level) return lastGroupEl;
 
     var groupEl = document.createElement("div");
     groupEl.className = "tries-sequence";
 
     var headEl = document.createElement("div");
-    headEl.className = "tries-sequence-head";
+    headEl.className = "tries-sequence-head" + (level.charAt(0) === "D" ? " type-doubles" : "");
     headEl.textContent = level;
 
     var cellsEl = document.createElement("div");
@@ -45,15 +56,12 @@
     groupEl.appendChild(cellsEl);
     sessionScrollEl.appendChild(groupEl);
 
-    currentGroupEl = groupEl;
-    currentGroupLevel = level;
-    currentGroupCellsEl = cellsEl;
-    return cellsEl;
+    return groupEl;
   }
 
   function showPending(level, targetScore){
     if (!pendingCellEl){
-      var cellsEl = ensureGroup(level);
+      pendingGroupEl = ensureGroup(level);
 
       pendingCellEl = document.createElement("div");
       pendingCellEl.className = "try-cell pending";
@@ -67,18 +75,20 @@
 
       pendingCellEl.appendChild(pendingScoreEl);
       pendingCellEl.appendChild(pendingStatusEl);
-      cellsEl.appendChild(pendingCellEl);
-    } else if (level !== currentGroupLevel){
+      groupCells(pendingGroupEl).appendChild(pendingCellEl);
+    } else if (level !== groupHead(pendingGroupEl)){
       // User browsed to a different level before resolving the pending try:
-      // relocate it into that level's box, opening one if needed, and drop
-      // the old box if it's left empty behind it.
-      var oldGroupEl = currentGroupEl;
-      var oldCellsEl = currentGroupCellsEl;
-      var newCellsEl = ensureGroup(level);
-      newCellsEl.appendChild(pendingCellEl);
-      if (oldCellsEl && !oldCellsEl.children.length && oldGroupEl && oldGroupEl.parentNode){
+      // detach it and drop its box first if that leaves it empty (which may
+      // reveal an earlier box for `level` as the strip's last one), then place
+      // it in (or open) the right box for `level`.
+      var oldGroupEl = pendingGroupEl;
+      var oldCellsEl = groupCells(oldGroupEl);
+      oldCellsEl.removeChild(pendingCellEl);
+      if (!oldCellsEl.children.length && oldGroupEl.parentNode){
         oldGroupEl.parentNode.removeChild(oldGroupEl);
       }
+      pendingGroupEl = ensureGroup(level);
+      groupCells(pendingGroupEl).appendChild(pendingCellEl);
     }
 
     pendingScoreEl.textContent = UiTools.formatScore(targetScore);
@@ -111,9 +121,7 @@
 
   function reset(){
     sessionScrollEl.innerHTML = "";
-    currentGroupEl = null;
-    currentGroupLevel = null;
-    currentGroupCellsEl = null;
+    pendingGroupEl = null;
     pendingCellEl = null;
     pendingScoreEl = null;
     pendingStatusEl = null;

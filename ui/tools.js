@@ -23,7 +23,14 @@
   // Slides the old value out and the new value in, like a wheel/odometer digit.
   // direction 1 (default): old exits downward, new enters from above (value went up).
   // direction -1: old exits upward, new enters from below (value went down).
-  function wheelText(el, text, baseClass, direction){
+  // force: replays the wheel animation even when text hasn't changed (e.g. a
+  // random reroll landing on the same value) so the user still sees it happen.
+  // oldBaseClass: the outgoing span's class, if it differs from the incoming
+  // value's (e.g. a singles->doubles mode switch changes the number's color) —
+  // keeps the old digit its own color instead of jumping to the new one mid-slide.
+  function wheelText(el, text, baseClass, direction, force, oldBaseClass){
+    if (oldBaseClass === undefined) oldBaseClass = baseClass;
+
     if (el.classList.contains("wheel-active")){
       window.clearTimeout(el._wheelTimer);
       el.textContent = el.dataset.wheelValue || text;
@@ -33,7 +40,7 @@
     }
 
     var currentText = el.textContent;
-    if (currentText === text) return;
+    if (currentText === text && !force) return;
 
     var oldWidth = el.offsetWidth;
     el.textContent = text;
@@ -43,7 +50,7 @@
     var height = el.offsetHeight;
 
     var oldSpan = document.createElement("span");
-    oldSpan.className = baseClass + " wheel-num";
+    oldSpan.className = oldBaseClass + " wheel-num";
     oldSpan.textContent = currentText;
 
     var newSpan = document.createElement("span");

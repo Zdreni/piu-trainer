@@ -36,7 +36,7 @@
   function backToSetup(){
     var storedWarmup = LevelModel.readStoredWarmupLevel();
     startLevelInput.value = storedWarmup !== null ? storedWarmup : 14;
-    TrainingSession.showSetup();
+    TrainingSession.resetToSetup();
   }
   restartBtn.addEventListener("click", backToSetup);
 
