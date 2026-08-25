@@ -180,8 +180,15 @@ body{
 }
 
 /* ---------- layout sections ---------- */
+/* Equal flex-grow on both gaps keeps the space above "Level" (below Session
+   Progress) the same size as the space below the AV cards (above the Chart
+   Target Score label), regardless of viewport height. */
+.v-gap{
+  flex:1 1 0;
+  min-height:0;
+}
+
 .level-block{
-  padding-top:clamp(0.75rem, 3vh, 2rem);
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -357,18 +364,13 @@ body{
   100%{transform:scale(1); text-shadow:0 0 0 rgba(255,182,72,0);}
 }
 
-.attempts-spacer{
-  flex:0.4;
-}
-
 .target-block{
-  flex:2;
+  flex:0 0 auto;
   display:flex;
   flex-direction:column;
   align-items:center;
-  justify-content:center;
   gap:0.4rem;
-  padding:0.5rem 0;
+  padding:0 0 0.5rem;
 }
 
 /* ---------- action buttons ---------- */
