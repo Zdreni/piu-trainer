@@ -278,6 +278,18 @@ body{
   background:var(--amber);
   border-color:var(--amber);
   justify-content:center;
+  position:relative;
+  padding:0.45rem 0.55rem 0.45rem 1.2rem;
+}
+.try-cell.pending::before{
+  content:"";
+  position:absolute;
+  left:0.15rem;
+  top:6%;
+  bottom:6%;
+  width:0.5rem;
+  background:rgba(10,12,18,0.4);
+  clip-path:polygon(0% 10%, 35% 10%, 100% 50%, 35% 90%, 0% 90%);
 }
 .try-cell.pending .try-cell-score,
 .try-cell.pending .try-cell-status{
