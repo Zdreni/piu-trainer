@@ -101,6 +101,32 @@
     }, 480);
   }
 
+  // Cancels any in-flight wheelNode animation on `el` and collapses it back
+  // down to a single resting child (keeping whichever node was mid-transition
+  // in), so `el` is left in a consistent, non-animating state. Must be called
+  // before anything bypasses wheelNode to touch el's content directly (e.g.
+  // an innerHTML wipe) — otherwise wheelNode's pending completion timer fires
+  // later and re-appends its stale node into el, stacking two balls.
+  function settleWheel(el){
+    window.clearTimeout(el._wheelTimer);
+    var clipEl = el.querySelector(".wheel-clip");
+    if (!clipEl) return;
+    var kids = clipEl.children;
+    var keep = kids[kids.length - 1];
+    if (keep){
+      keep.style.position = "";
+      keep.style.top = "";
+      keep.style.left = "";
+      keep.style.transform = "";
+      keep.style.transition = "";
+      el.appendChild(keep);
+    }
+    clipEl.remove();
+    el.style.width = "";
+    el.style.height = "";
+    el.style.position = "";
+  }
+
   // Like wheelText, but slides a whole freshly-built element in/out instead of
   // plain text — used where the sliding "digit" is itself an entire styled node
   // (e.g. the level ball, shape/shadow/gradient and all) rather than a text run.
@@ -116,24 +142,7 @@
   function wheelNode(el, key, buildNode, direction, force, padding){
     padding = padding || 0;
 
-    var clipEl = el.querySelector(".wheel-clip");
-    if (clipEl){
-      window.clearTimeout(el._wheelTimer);
-      var kids = clipEl.children;
-      var keep = kids[kids.length - 1];
-      if (keep){
-        keep.style.position = "";
-        keep.style.top = "";
-        keep.style.left = "";
-        keep.style.transform = "";
-        keep.style.transition = "";
-        el.appendChild(keep);
-      }
-      clipEl.remove();
-      el.style.width = "";
-      el.style.height = "";
-      el.style.position = "";
-    }
+    settleWheel(el);
 
     if (el.dataset.wheelKey === key && !force) return;
 
@@ -155,7 +164,7 @@
     el.style.height = height + "px";
     el.style.position = "relative";
 
-    clipEl = document.createElement("div");
+    var clipEl = document.createElement("div");
     clipEl.className = "wheel-clip";
     clipEl.style.position = "absolute";
     clipEl.style.top = (-padding) + "px";
@@ -256,6 +265,7 @@
     splash: splash,
     wheelText: wheelText,
     wheelNode: wheelNode,
+    settleWheel: settleWheel,
     buildLevelBall: buildLevelBall,
     animateCount: animateCount
   };

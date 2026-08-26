@@ -107,6 +107,7 @@
     levelBurstEl.classList.toggle("type-doubles", isDoubles);
 
     if (!config){
+      UiTools.settleWheel(levelNumberEl);
       levelNumberEl.innerHTML = "";
       levelNumberEl.appendChild(UiTools.buildLevelBall(typeWord, String(level), isDoubles));
       levelNumberEl.dataset.wheelKey = newLevelText;
@@ -181,6 +182,7 @@
       }, levelDirection, forceAnim && !levelChanged, 0);
       UiTools.burstGlow(levelBurstEl);
     } else {
+      UiTools.settleWheel(levelNumberEl);
       levelNumberEl.innerHTML = "";
       levelNumberEl.appendChild(UiTools.buildLevelBall(typeWord, String(level), isDoubles));
       levelNumberEl.dataset.wheelKey = newLevelText;
