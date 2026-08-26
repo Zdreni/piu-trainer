@@ -4,19 +4,19 @@
   --bg-panel-2:#171b28;
   --line:rgba(255,255,255,0.08);
   --brand-accent:#ff3d7f;
-  --pink:#c53a1f;
-  --pink-dim:rgba(197,58,31,0.35);
+  --pink:#ff6b45;
+  --pink-dim:rgba(255,107,69,0.35);
   --cyan:#2fe6d8;
   --cyan-dim:rgba(47,230,216,0.35);
   --yellow:#ff8a3d;
   --yellow-dim:rgba(255,138,61,0.35);
-  --yellow-light:#f0b48a;
+  --yellow-light:#ffd27a;
   --amber:#ffb648;
   --green:#5ce694;
   --green-dim:rgba(92,230,148,0.35);
   --green-pale:#a8f0c4;
-  --doubles:#2f9e5a;
-  --doubles-dim:rgba(47,158,90,0.35);
+  --doubles:#3ddc84;
+  --doubles-dim:rgba(61,220,132,0.35);
   --red:#ff4757;
   --text-hi:#f5f6fa;
   --text-mid:#9aa0b4;
@@ -167,14 +167,14 @@ body{
   font-size:clamp(4.8rem, 24vw, 8rem);
   line-height:1;
   letter-spacing:-0.03em;
-  background:linear-gradient(180deg, #d5613f 0%, var(--pink) 120%);
+  background:linear-gradient(180deg, #ffab85 0%, var(--pink) 120%);
   -webkit-background-clip:text;
   background-clip:text;
   color:transparent;
   filter:drop-shadow(0 0 22px var(--pink-dim));
 }
 .level-number.type-doubles{
-  background-image:linear-gradient(180deg, #57b479 0%, var(--doubles) 120%);
+  background-image:linear-gradient(180deg, #8ff5b8 0%, var(--doubles) 120%);
   filter:drop-shadow(0 0 22px var(--doubles-dim));
 }
 
@@ -311,19 +311,19 @@ body{
 #modeRandomBtn{color:var(--cyan);}
 
 .mode-btn.is-active{
-  background:linear-gradient(180deg, var(--pink) 0%, rgba(213,97,63,0.55) 150%);
-  border-color:var(--pink);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--pink) 25%, transparent) 0%, color-mix(in srgb, var(--pink) 12%, transparent) 150%), var(--bg-panel);
+  border-color:color-mix(in srgb, var(--pink) 55%, transparent);
   color:var(--text-hi);
 }
 #modeSinglesBtn.is-active{color:var(--text-hi);}
 #modeRandomBtn.is-active{
-  background:linear-gradient(180deg, var(--cyan) 0%, rgba(47,230,216,0.55) 150%);
-  border-color:var(--cyan);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--cyan) 25%, transparent) 0%, color-mix(in srgb, var(--cyan) 12%, transparent) 150%), var(--bg-panel);
+  border-color:color-mix(in srgb, var(--cyan) 55%, transparent);
   color:var(--text-hi);
 }
 #modeDoublesBtn.is-active{
-  background:linear-gradient(180deg, var(--doubles) 0%, rgba(47,158,90,0.55) 150%);
-  border-color:var(--doubles);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--doubles) 25%, transparent) 0%, color-mix(in srgb, var(--doubles) 12%, transparent) 150%), var(--bg-panel);
+  border-color:color-mix(in srgb, var(--doubles) 55%, transparent);
   color:var(--text-hi);
 }
 
@@ -451,7 +451,7 @@ body{
   to{opacity:1; transform:translateY(0);}
 }
 .try-cell.pending{
-  border-color:var(--yellow-light);
+  border-color:color-mix(in srgb, var(--yellow-light) 55%, #000);
 }
 .try-cell.pending .try-cell-score,
 .try-cell.pending .try-cell-status{
