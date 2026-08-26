@@ -388,6 +388,19 @@ body{
 .level-ball--tiny.type-doubles{
   background:color-mix(in srgb, var(--doubles) 82%, #000);
 }
+/* Dims every ball except the current (pending) try's: darker fill and
+   darker (not faded/transparent) text, so the sphere itself stays opaque
+   but reads as dimmer against the brighter current-try ball. */
+.try-cell:not(.pending) > .level-ball--tiny{
+  background:color-mix(in srgb, var(--pink) 45%, #000);
+}
+.try-cell:not(.pending) > .level-ball--tiny.type-doubles{
+  background:color-mix(in srgb, var(--doubles) 45%, #000);
+}
+.try-cell:not(.pending) > .level-ball--tiny .level-ball-value{
+  color:color-mix(in srgb, #fff 55%, #000);
+  text-shadow:none;
+}
 .level-ball--tiny .level-ball-type{
   display:none;
 }
