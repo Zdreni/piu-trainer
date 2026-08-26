@@ -97,9 +97,11 @@
 
   function showPending(level, targetScore){
     var parts = levelParts(level);
+    var isNewGroup = false;
 
     if (!pendingCellEl){
       pendingGroupEl = ensureGroup(parts.num);
+      isNewGroup = !groupCells(pendingGroupEl).children.length;
 
       pendingCellEl = document.createElement("div");
       pendingCellEl.className = "try-cell pending";
@@ -134,6 +136,7 @@
           oldGroupEl.parentNode.removeChild(oldGroupEl);
         }
         pendingGroupEl = ensureGroup(parts.num);
+        isNewGroup = !groupCells(pendingGroupEl).children.length;
         groupCells(pendingGroupEl).appendChild(pendingCellEl);
         placeArrow();
       }
@@ -152,7 +155,24 @@
     pendingLevel = level;
     pendingTarget = targetScore;
 
-    sessionScrollEl.scrollLeft = sessionScrollEl.scrollWidth;
+    scrollToEnd();
+    if (isNewGroup) correctScrollAfterEntrance(pendingGroupEl);
+  }
+
+  // A freshly opened group plays a scale/translate entrance animation
+  // (.tries-sequence's sessionCellIn), and a transformed box counts toward its
+  // scroll container's scrollable overflow at its *current* (mid-animation)
+  // size, not its settled one. scrollToEnd() called right after insertion
+  // therefore measures the group while it's still scaled down, undershooting
+  // the true end and cropping it once it reaches full size. Re-run the scroll
+  // once the entrance animation finishes to land on the real edge.
+  function correctScrollAfterEntrance(groupEl){
+    function onEnd(e){
+      if (e.target !== groupEl) return;
+      groupEl.removeEventListener("animationend", onEnd);
+      scrollToEnd();
+    }
+    groupEl.addEventListener("animationend", onEnd);
   }
 
   // Turns the pending cell into a permanent record of the try that just happened.
@@ -205,8 +225,12 @@
     return triesLog.length ? triesLog[triesLog.length - 1] : undefined;
   }
 
+  // Scrolls to the true last pixel (scrollWidth - clientWidth) rather than
+  // scrollWidth itself: on iOS Safari, assigning an out-of-range scrollLeft
+  // while scroll-behavior:smooth is active can overshoot into the rubber-band
+  // zone and settle short of the real edge, cropping the last cell.
   function scrollToEnd(){
-    sessionScrollEl.scrollLeft = sessionScrollEl.scrollWidth;
+    sessionScrollEl.scrollLeft = sessionScrollEl.scrollWidth - sessionScrollEl.clientWidth;
   }
 
   // Rebuilds the strip from a saved list of resolved tries (e.g. after a page reload).
