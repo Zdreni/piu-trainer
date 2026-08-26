@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="level-controller.css?v=136">
+<link rel="stylesheet" href="level-controller.css?v=138">
 </head>
 <body>
 
@@ -50,13 +50,6 @@
       <button class="level-nav-btn level-nav-left" id="levelDownBtn" title="Decrease level" aria-label="Decrease level">&#8722;</button>
       <button class="level-nav-btn level-nav-right" id="levelUpBtn" title="Increase level" aria-label="Increase level">&#43;</button>
 
-      <div class="session-wrap">
-        <div class="eyebrow">Session Progress</div>
-        <div class="session-scroll" id="sessionScroll"></div>
-      </div>
-
-      <div class="v-gap"></div>
-
       <div class="level-block">
         <div class="eyebrow">Next chart</div>
         <div class="mode-row">
@@ -81,7 +74,7 @@
         <span class="rec-av-prefix">AV</span><span class="rec-av-value" id="recAv">&mdash;</span>
       </div>
 
-      <div class="v-gap"></div>
+      <div class="v-gap flow-gap" id="flowGap"></div>
 
       <div class="target-block">
         <div class="eyebrow">Try to get score</div>
@@ -93,6 +86,13 @@
           </div>
           <button class="btn btn-pass" id="passBtn"><span class="btn-symbol">&ge;</span><span class="btn-footer">pass</span></button>
         </div>
+      </div>
+
+      <div class="v-gap"></div>
+
+      <div class="session-wrap">
+        <div class="eyebrow">Session Progress</div>
+        <div class="session-scroll" id="sessionScroll"></div>
       </div>
     </section>
 
@@ -126,7 +126,7 @@
   <script src="model.js?v=9"></script>
   <script src="ui/tools.js?v=7"></script>
   <script src="ui/session_tries_history.js?v=13"></script>
-  <script src="ui/session_screen.js?v=29"></script>
+  <script src="ui/session_screen.js?v=31"></script>
   <script src="ui/start_screen.js?v=10"></script>
   <script src="ui/data_modal.js?v=3"></script>
   <script src="app.js?v=33"></script>

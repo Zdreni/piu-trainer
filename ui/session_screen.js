@@ -38,6 +38,15 @@
   var jumpInput = document.getElementById("jumpInput");
   var jumpBtn = document.getElementById("jumpBtn");
 
+  var flowGapEl = document.getElementById("flowGap");
+
+  function makeFlowChevron(){
+    var el = document.createElement("div");
+    el.className = "flow-chevron";
+    el.setAttribute("aria-hidden", "true");
+    return el;
+  }
+
   // ---- helpers ----
   function pulse(el){
     el.classList.remove("av-pulse");
@@ -68,6 +77,33 @@
   function positionRecAv(){
     if (playEl.hidden) return;
     recAvBoxEl.style.width = levelNumberEl.parentElement.getBoundingClientRect().width + "px";
+  }
+
+  // Shows only as many route chevrons as fit in the gap between the AV badge
+  // and the target score, hiding the ones closest to the score first — so
+  // they never overlap each other or bleed into the score below on short
+  // viewports. Sizes are read from the live layout rather than assumed, so
+  // this stays correct if the CSS is ever tuned.
+  function layoutFlowChevrons(){
+    if (!flowGapEl) return;
+    if (playEl.hidden) return;
+
+    // Needs at least one chevron in the DOM to measure its rendered size against.
+    if (!flowGapEl.firstElementChild) flowGapEl.appendChild(makeFlowChevron());
+
+    var first = flowGapEl.firstElementChild;
+    var unitHeight = first.getBoundingClientRect().height;
+    var topMargin = parseFloat(getComputedStyle(first).marginTop) || 0;
+    var gap = parseFloat(getComputedStyle(flowGapEl).rowGap) || 0;
+
+    var available = flowGapEl.getBoundingClientRect().height;
+    var remaining = available - topMargin;
+    var count = remaining < unitHeight ? 0 : Math.floor((remaining + gap) / (unitHeight + gap));
+    count = Math.max(0, count);
+
+    var current = flowGapEl.children.length;
+    for (var i = current; i < count; i++) flowGapEl.appendChild(makeFlowChevron());
+    for (var j = current; j > count; j--) flowGapEl.removeChild(flowGapEl.lastElementChild);
   }
 
   function updateLevelNavButtons(){
@@ -198,6 +234,7 @@
     updateModeButtons();
     positionLevelNavButtons();
     positionRecAv();
+    layoutFlowChevrons();
     persistSession();
   }
 
@@ -295,6 +332,7 @@
 
   window.addEventListener("resize", positionLevelNavButtons);
   window.addEventListener("resize", positionRecAv);
+  window.addEventListener("resize", layoutFlowChevrons);
 
   jumpBtn.addEventListener("click", function(){
     var val = parseInt(jumpInput.value, 10);

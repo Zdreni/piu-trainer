@@ -257,12 +257,58 @@ body{
 }
 
 /* ---------- layout sections ---------- */
-/* Equal flex-grow on both gaps keeps the space above "Level" (below Session
-   Progress) the same size as the space below the AV cards (above the Chart
-   Target Score label), regardless of viewport height. */
+/* Equal flex-grow on both gaps keeps the space above the target score (below
+   the AV badge) the same size as the space below the pass/fail buttons
+   (above Session Progress), regardless of viewport height. */
 .v-gap{
   flex:1 1 0;
   min-height:0;
+}
+
+/* Anchors the chevron stack near the top of the gap (close to the AV badge)
+   instead of centering it, tracing a path down toward the target score. */
+.flow-gap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:0;
+}
+/* A bold V-shaped caret pointing down, built from two rotated bars (same
+   dark tone as the AV badge's background). */
+.flow-chevron{
+  position:relative;
+  flex-shrink:0;
+  width:5.2rem;
+  height:2.8rem;
+}
+/* Breathing room above the first chevron (from the AV badge) and below the
+   last one (to the target score), the latter matching the gap used between
+   chevrons so the whole path reads as one even rhythm. */
+.flow-chevron:first-child{
+  margin-top:1rem;
+}
+.flow-chevron:last-child{
+  margin-bottom:0;
+}
+.flow-chevron::before,
+.flow-chevron::after{
+  content:"";
+  position:absolute;
+  top:1rem;
+  width:58%;
+  height:0.8rem;
+  border-radius:999px;
+  background:#000;
+  border:1px solid var(--line);
+}
+.flow-chevron::before{
+  left:2%;
+  transform:rotate(45deg);
+}
+.flow-chevron::after{
+  right:2%;
+  transform:rotate(-45deg);
 }
 
 .level-block{
