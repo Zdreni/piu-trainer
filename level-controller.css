@@ -10,6 +10,7 @@
   --cyan-dim:rgba(47,230,216,0.35);
   --yellow:#ff8a3d;
   --yellow-dim:rgba(255,138,61,0.35);
+  --yellow-light:#f0b48a;
   --amber:#ffb648;
   --green:#5ce694;
   --green-dim:rgba(92,230,148,0.35);
@@ -240,7 +241,7 @@ body{
   font-size:clamp(4.8rem, 24vw, 8rem);
   line-height:1;
   letter-spacing:-0.06em;
-  background:linear-gradient(180deg, #f0b48a 0%, var(--yellow) 120%);
+  background:linear-gradient(180deg, var(--yellow-light) 0%, var(--yellow) 120%);
   -webkit-background-clip:text;
   background-clip:text;
   color:transparent;
@@ -450,29 +451,48 @@ body{
   to{opacity:1; transform:translateY(0);}
 }
 .try-cell.pending{
-  background:var(--amber);
-  border-color:var(--amber);
-  padding:0 0.35rem 0 0.85rem;
-}
-.try-cell.pending::before{
-  content:"";
-  position:absolute;
-  left:0.15rem;
-  top:6%;
-  bottom:6%;
-  width:0.5rem;
-  background:rgba(10,12,18,0.4);
-  clip-path:polygon(0% 10%, 35% 10%, 100% 50%, 35% 90%, 0% 90%);
+  border-color:var(--yellow-light);
 }
 .try-cell.pending .try-cell-score,
 .try-cell.pending .try-cell-status{
-  color:var(--bg-void);
+  color:var(--yellow-light);
 }
 .try-cell.pending .try-cell-score{
   font-size:1.25rem;
 }
 .try-cell.pending .try-cell-status{
   display:none;
+}
+/* Points at the current (pending) cell from its left — sits in the gap between
+   cells, or between session-progress boxes when the pending cell opens a new one.
+   Same yellow the big target-number readout uses, so the two visually match. */
+.pending-arrow{
+  flex:0 0 auto;
+  align-self:center;
+  width:0.6rem;
+  height:3.4rem;
+  background:var(--yellow-light);
+  clip-path:polygon(0% 8%, 45% 8%, 100% 50%, 45% 92%, 0% 92%);
+}
+/* Leading the strip or sitting between groups, the arrow inherits
+   .session-scroll's group-to-group gap on both sides — pull it in by half
+   so the space around the arrow matches the tighter in-group cell gap.
+   Left side only shrinks when there's an actual previous group there —
+   at the very start of the strip that space is the container's own edge
+   padding, not a gap, and pulling on it would clip the arrow. */
+.session-scroll > .pending-arrow{
+  margin-right:-0.45rem;
+  /* .tries-sequence's padding is asymmetric (1.25rem top, sized to leave
+     room for the level ball straddling the group's top edge; 0.2rem
+     bottom), so a plain vertical center over the whole group sits above
+     the center of its cell row. Pin this arrow to that same cell-row
+     center by hand: padding-top + try-cell min-height/2 - arrow height/2
+     = 1.25rem + 4.92rem/2 - 3.4rem/2. Keep in sync with those two values. */
+  align-self:flex-start;
+  margin-top:2.01rem;
+}
+.session-scroll > .pending-arrow:not(:first-child){
+  margin-left:-0.45rem;
 }
 .try-cell.pass{
   border-color:rgba(92,230,148,0.18);

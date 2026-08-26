@@ -26,6 +26,13 @@
   var pendingLevel = null;
   var pendingTarget = null;
 
+  // Points at the pending cell from its left. Lives either among the group's
+  // cells (neighbor is the previous try) or in the top-level strip right
+  // before the group (neighbor is the previous group), depending on whether
+  // the pending cell opens its group or continues one. Detached entirely when
+  // there's no neighbor to point from (the very first cell of the session).
+  var pendingArrowEl = null;
+
   // Resolved tries for the current session, in order, so the strip can be
   // rebuilt after a page reload.
   var triesLog = [];
@@ -69,6 +76,25 @@
     return groupEl;
   }
 
+  // Detaches the pending arrow from wherever it currently sits and reinserts
+  // it right before pendingCellEl: alongside another cell in the same group,
+  // or — if pendingCellEl opens its group (including the session's very
+  // first group) — outside the group box entirely, leading the strip.
+  function placeArrow(){
+    if (!pendingArrowEl){
+      pendingArrowEl = document.createElement("div");
+      pendingArrowEl.className = "pending-arrow";
+    } else if (pendingArrowEl.parentNode){
+      pendingArrowEl.parentNode.removeChild(pendingArrowEl);
+    }
+
+    if (pendingCellEl.previousElementSibling){
+      groupCells(pendingGroupEl).insertBefore(pendingArrowEl, pendingCellEl);
+    } else {
+      sessionScrollEl.insertBefore(pendingArrowEl, pendingGroupEl);
+    }
+  }
+
   function showPending(level, targetScore){
     var parts = levelParts(level);
 
@@ -90,20 +116,26 @@
       pendingCellEl.appendChild(pendingScoreEl);
       pendingCellEl.appendChild(pendingStatusEl);
       groupCells(pendingGroupEl).appendChild(pendingCellEl);
+      placeArrow();
     } else {
       if (parts.num !== groupHead(pendingGroupEl)){
         // User browsed to a different level before resolving the pending try:
-        // detach it and drop its box first if that leaves it empty (which may
-        // reveal an earlier box for this level as the strip's last one), then
-        // place it in (or open) the right box for the new level.
+        // detach it (and the arrow pointing at it) and drop its box first if
+        // that leaves it empty (which may reveal an earlier box for this
+        // level as the strip's last one), then place it in (or open) the
+        // right box for the new level.
         var oldGroupEl = pendingGroupEl;
         var oldCellsEl = groupCells(oldGroupEl);
+        if (pendingArrowEl && pendingArrowEl.parentNode){
+          pendingArrowEl.parentNode.removeChild(pendingArrowEl);
+        }
         oldCellsEl.removeChild(pendingCellEl);
         if (!oldCellsEl.children.length && oldGroupEl.parentNode){
           oldGroupEl.parentNode.removeChild(oldGroupEl);
         }
         pendingGroupEl = ensureGroup(parts.num);
         groupCells(pendingGroupEl).appendChild(pendingCellEl);
+        placeArrow();
       }
 
       if (level !== pendingLevel){
@@ -137,6 +169,10 @@
 
     triesLog.push({ level: pendingLevel, target: pendingTarget, success: success });
 
+    if (pendingArrowEl && pendingArrowEl.parentNode){
+      pendingArrowEl.parentNode.removeChild(pendingArrowEl);
+    }
+    pendingArrowEl = null;
     pendingCellEl = null;
     pendingBallEl = null;
     pendingScoreEl = null;
@@ -148,6 +184,7 @@
   function reset(){
     sessionScrollEl.innerHTML = "";
     pendingGroupEl = null;
+    pendingArrowEl = null;
     pendingCellEl = null;
     pendingBallEl = null;
     pendingScoreEl = null;
