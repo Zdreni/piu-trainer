@@ -393,13 +393,13 @@ body{
   display:none;
 }
 .try-cell.pass{
-  border-color:rgba(92,230,148,0.4);
+  border-color:rgba(92,230,148,0.18);
 }
-.try-cell.pass .try-cell-status{color:var(--green-pale);}
+.try-cell.pass .try-cell-status{color:#8a9c94;}
 .try-cell.fail{
-  border-color:rgba(255,71,87,0.35);
+  border-color:rgba(255,71,87,0.16);
 }
-.try-cell.fail .try-cell-status{color:var(--red);}
+.try-cell.fail .try-cell-status{color:#a01f2b;}
 .try-cell.fail .try-cell-score{text-decoration:line-through;}
 
 .rec-av{
