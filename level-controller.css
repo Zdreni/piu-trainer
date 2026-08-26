@@ -6,8 +6,8 @@
   --brand-accent:#ff3d7f;
   --pink:#ff6b45;
   --pink-dim:rgba(255,107,69,0.35);
-  --cyan:#2fe6d8;
-  --cyan-dim:rgba(47,230,216,0.35);
+  --cyan:#22d3ee;
+  --cyan-dim:rgba(34,211,238,0.35);
   --yellow:#ff8a3d;
   --yellow-dim:rgba(255,138,61,0.35);
   --yellow-light:#ffd27a;
@@ -351,26 +351,21 @@ body{
 }
 .mode-btn:active{transform:scale(0.95);}
 
-/* Each button's unpressed text matches the color its background turns when pressed. */
-#modeSinglesBtn{color:var(--pink);}
-#modeDoublesBtn{color:var(--doubles);}
-#modeRandomBtn{color:var(--cyan);}
 
 .mode-btn.is-active{
-  background:linear-gradient(180deg, color-mix(in srgb, var(--pink) 25%, transparent) 0%, color-mix(in srgb, var(--pink) 12%, transparent) 150%), var(--bg-panel);
-  border-color:color-mix(in srgb, var(--pink) 55%, transparent);
-  color:var(--text-hi);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--pink) 20%, transparent) 0%, color-mix(in srgb, var(--pink) 10%, transparent) 150%), var(--bg-panel);
+  border-color:color-mix(in srgb, var(--pink) 18%, transparent);
+  color:color-mix(in srgb, var(--pink) 25%, white);
 }
-#modeSinglesBtn.is-active{color:var(--text-hi);}
 #modeRandomBtn.is-active{
-  background:linear-gradient(180deg, color-mix(in srgb, var(--cyan) 25%, transparent) 0%, color-mix(in srgb, var(--cyan) 12%, transparent) 150%), var(--bg-panel);
-  border-color:color-mix(in srgb, var(--cyan) 55%, transparent);
-  color:var(--text-hi);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--cyan) 20%, transparent) 0%, color-mix(in srgb, var(--cyan) 10%, transparent) 150%), var(--bg-panel);
+  border-color:color-mix(in srgb, var(--cyan) 18%, transparent);
+  color:color-mix(in srgb, var(--cyan) 25%, white);
 }
 #modeDoublesBtn.is-active{
-  background:linear-gradient(180deg, color-mix(in srgb, var(--doubles) 25%, transparent) 0%, color-mix(in srgb, var(--doubles) 12%, transparent) 150%), var(--bg-panel);
-  border-color:color-mix(in srgb, var(--doubles) 55%, transparent);
-  color:var(--text-hi);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--doubles) 20%, transparent) 0%, color-mix(in srgb, var(--doubles) 10%, transparent) 150%), var(--bg-panel);
+  border-color:color-mix(in srgb, var(--doubles) 18%, transparent);
+  color:color-mix(in srgb, var(--doubles) 25%, white);
 }
 
 .session-wrap{
