@@ -102,12 +102,14 @@
 
     var newLevelText = SessionModel.currentLabel();
     var levelChanged = lastLevelText !== null && newLevelText !== lastLevelText;
-    var levelBaseClass = "level-number" + (SessionModel.currentTypeLetter() === "D" ? " type-doubles" : "");
-    levelBurstEl.classList.toggle("type-doubles", SessionModel.currentTypeLetter() === "D");
+    var isDoubles = SessionModel.currentTypeLetter() === "D";
+    var typeWord = isDoubles ? "Double" : "Single";
+    levelBurstEl.classList.toggle("type-doubles", isDoubles);
 
     if (!config){
-      levelNumberEl.className = levelBaseClass;
-      levelNumberEl.textContent = newLevelText;
+      levelNumberEl.innerHTML = "";
+      levelNumberEl.appendChild(UiTools.buildLevelBall(typeWord, String(level), isDoubles));
+      levelNumberEl.dataset.wheelKey = newLevelText;
       noDataLevelEl.textContent = newLevelText;
       jumpInput.value = level;
       window.showScreen("noData");
@@ -149,7 +151,8 @@
       }
       // Until a chart's actually been tried there's no baseline to compare
       // against yet, so stay highlighted rather than defaulting to dimmed.
-      var avBaseline = SessionModel.getAvBaseline();
+      var lastTry = SessionTriesHistory.getLastTry();
+      var avBaseline = lastTry ? SessionModel.avForLabel(lastTry.level) : undefined;
       var avHighlighted = avBaseline === undefined || avValue !== avBaseline;
       recAvEl.classList.toggle("is-unchanged", !avHighlighted);
       if (avTextChanged && avHighlighted) pulse(recAvEl);
@@ -169,12 +172,18 @@
     var animateLevel = levelChanged || forceAnim;
     if (animateLevel){
       var levelDirection = (lastLevelValue !== null && level < lastLevelValue) ? -1 : 1;
-      var oldLevelBaseClass = "level-number" + (lastLevelText !== null && lastLevelText.charAt(0) === "D" ? " type-doubles" : "");
-      UiTools.wheelText(levelNumberEl, newLevelText, levelBaseClass, levelDirection, forceAnim && !levelChanged, oldLevelBaseClass);
+      // No padding: the ball sits close enough to the mode buttons and AV badge
+      // above/below that any padded glow bleed during the slide overlaps them.
+      // Clipping flush to the ball's own edge hides the glow while it's moving
+      // and lets it reappear cleanly once the new ball settles.
+      UiTools.wheelNode(levelNumberEl, newLevelText, function(){
+        return UiTools.buildLevelBall(typeWord, String(level), isDoubles);
+      }, levelDirection, forceAnim && !levelChanged, 0);
       UiTools.burstGlow(levelBurstEl);
     } else {
-      levelNumberEl.className = levelBaseClass;
-      levelNumberEl.textContent = newLevelText;
+      levelNumberEl.innerHTML = "";
+      levelNumberEl.appendChild(UiTools.buildLevelBall(typeWord, String(level), isDoubles));
+      levelNumberEl.dataset.wheelKey = newLevelText;
     }
     if (targetChanged || levelChanged || forceAnim) UiTools.splash(targetNumberEl, targetBurstEl);
 
@@ -241,8 +250,6 @@
 
   // ---- events ----
   passBtn.addEventListener("click", function(){
-    var level = SessionModel.currentLevel();
-    SessionModel.setAvBaseline(SessionModel.currentAv(LevelModel.getConfig(level)));
     SessionTriesHistory.resolveTry(SessionModel.currentLabel(), true);
     SessionModel.recordPass();
     render();
@@ -251,7 +258,6 @@
   failBtn.addEventListener("click", function(){
     var config = LevelModel.getConfig(SessionModel.currentLevel());
     if (!config) return;
-    SessionModel.setAvBaseline(SessionModel.currentAv(config));
     SessionTriesHistory.resolveTry(SessionModel.currentLabel(), false);
     SessionModel.recordFail(config);
     render();

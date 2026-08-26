@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Pump It Up trainer</title>
-<link rel="stylesheet" href="level-controller.css?v=86">
+<link rel="stylesheet" href="level-controller.css?v=124">
 </head>
 <body>
 
@@ -55,7 +55,12 @@
         </div>
         <div class="number-wrap">
           <div class="burst pink" id="levelBurst"></div>
-          <div class="level-number" id="levelNumber" aria-live="polite">--</div>
+          <div class="level-ball-mask" id="levelNumber" aria-live="polite">
+            <div class="level-ball">
+              <span class="level-ball-type">Single</span>
+              <span class="level-ball-value">--</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -105,10 +110,10 @@
 
   </div>
 
-  <script src="model.js?v=6"></script>
-  <script src="ui/tools.js?v=2"></script>
-  <script src="ui/session_tries_history.js?v=8"></script>
-  <script src="ui/session_screen.js?v=21"></script>
+  <script src="model.js?v=8"></script>
+  <script src="ui/tools.js?v=7"></script>
+  <script src="ui/session_tries_history.js?v=13"></script>
+  <script src="ui/session_screen.js?v=29"></script>
   <script src="ui/start_screen.js?v=3"></script>
   <script src="ui/data_modal.js?v=2"></script>
   <script src="app.js?v=31"></script>

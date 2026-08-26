@@ -20,6 +20,7 @@
   // it into a permanent, footer-tagged cell and opens a fresh pending cell for the
   // next attempt.
   var pendingCellEl = null;
+  var pendingBallEl = null;
   var pendingScoreEl = null;
   var pendingStatusEl = null;
   var pendingLevel = null;
@@ -29,25 +30,34 @@
   // rebuilt after a page reload.
   var triesLog = [];
 
+  // level looks like "S15"/"D15" — split into the pieces buildLevelBall wants.
+  function levelParts(level){
+    var isDoubles = level.charAt(0) === "D";
+    return { isDoubles: isDoubles, typeWord: isDoubles ? "Double" : "Single", num: level.slice(1) };
+  }
+
+  // Groups are keyed by level number alone, so S23 and D23 share one group —
+  // each cell still shows its own type/level via its own ball.
   function groupHead(groupEl){
-    return groupEl.querySelector(".tries-sequence-head").textContent;
+    return groupEl.querySelector(".tries-sequence-head").dataset.levelNum;
   }
 
   function groupCells(groupEl){
     return groupEl.querySelector(".tries-sequence-cells");
   }
 
-  // Reuses the strip's last box if its level matches; opens a new one otherwise.
-  function ensureGroup(level){
+  // Reuses the strip's last box if its level number matches; opens a new one otherwise.
+  function ensureGroup(numLevel){
     var lastGroupEl = sessionScrollEl.lastElementChild;
-    if (lastGroupEl && groupHead(lastGroupEl) === level) return lastGroupEl;
+    if (lastGroupEl && groupHead(lastGroupEl) === numLevel) return lastGroupEl;
 
     var groupEl = document.createElement("div");
     groupEl.className = "tries-sequence";
 
     var headEl = document.createElement("div");
-    headEl.className = "tries-sequence-head" + (level.charAt(0) === "D" ? " type-doubles" : "");
-    headEl.textContent = level;
+    headEl.className = "tries-sequence-head";
+    headEl.dataset.levelNum = numLevel;
+    headEl.textContent = numLevel;
 
     var cellsEl = document.createElement("div");
     cellsEl.className = "tries-sequence-cells";
@@ -60,8 +70,10 @@
   }
 
   function showPending(level, targetScore){
+    var parts = levelParts(level);
+
     if (!pendingCellEl){
-      pendingGroupEl = ensureGroup(level);
+      pendingGroupEl = ensureGroup(parts.num);
 
       pendingCellEl = document.createElement("div");
       pendingCellEl.className = "try-cell pending";
@@ -73,22 +85,35 @@
       pendingStatusEl.className = "try-cell-status";
       pendingStatusEl.textContent = "";
 
+      pendingBallEl = UiTools.buildLevelBall(parts.typeWord, parts.num, parts.isDoubles, "level-ball--tiny");
+      pendingCellEl.appendChild(pendingBallEl);
       pendingCellEl.appendChild(pendingScoreEl);
       pendingCellEl.appendChild(pendingStatusEl);
       groupCells(pendingGroupEl).appendChild(pendingCellEl);
-    } else if (level !== groupHead(pendingGroupEl)){
-      // User browsed to a different level before resolving the pending try:
-      // detach it and drop its box first if that leaves it empty (which may
-      // reveal an earlier box for `level` as the strip's last one), then place
-      // it in (or open) the right box for `level`.
-      var oldGroupEl = pendingGroupEl;
-      var oldCellsEl = groupCells(oldGroupEl);
-      oldCellsEl.removeChild(pendingCellEl);
-      if (!oldCellsEl.children.length && oldGroupEl.parentNode){
-        oldGroupEl.parentNode.removeChild(oldGroupEl);
+    } else {
+      if (parts.num !== groupHead(pendingGroupEl)){
+        // User browsed to a different level before resolving the pending try:
+        // detach it and drop its box first if that leaves it empty (which may
+        // reveal an earlier box for this level as the strip's last one), then
+        // place it in (or open) the right box for the new level.
+        var oldGroupEl = pendingGroupEl;
+        var oldCellsEl = groupCells(oldGroupEl);
+        oldCellsEl.removeChild(pendingCellEl);
+        if (!oldCellsEl.children.length && oldGroupEl.parentNode){
+          oldGroupEl.parentNode.removeChild(oldGroupEl);
+        }
+        pendingGroupEl = ensureGroup(parts.num);
+        groupCells(pendingGroupEl).appendChild(pendingCellEl);
       }
-      pendingGroupEl = ensureGroup(level);
-      groupCells(pendingGroupEl).appendChild(pendingCellEl);
+
+      if (level !== pendingLevel){
+        // Type and/or level changed since the pending cell was last shown
+        // (a level move, or a same-level type switch that stays in the same
+        // group) — rebuild its ball so it reflects the new type/level.
+        var newBallEl = UiTools.buildLevelBall(parts.typeWord, parts.num, parts.isDoubles, "level-ball--tiny");
+        pendingCellEl.replaceChild(newBallEl, pendingBallEl);
+        pendingBallEl = newBallEl;
+      }
     }
 
     pendingScoreEl.innerHTML = UiTools.formatScoreHtml(targetScore);
@@ -113,6 +138,7 @@
     triesLog.push({ level: pendingLevel, target: pendingTarget, success: success });
 
     pendingCellEl = null;
+    pendingBallEl = null;
     pendingScoreEl = null;
     pendingStatusEl = null;
     pendingLevel = null;
@@ -123,6 +149,7 @@
     sessionScrollEl.innerHTML = "";
     pendingGroupEl = null;
     pendingCellEl = null;
+    pendingBallEl = null;
     pendingScoreEl = null;
     pendingStatusEl = null;
     pendingLevel = null;
@@ -132,6 +159,13 @@
 
   function getTries(){
     return triesLog.slice();
+  }
+
+  // The most recent resolved try (pass or fail), if any — used as the AV
+  // highlight baseline, since it's already the source of truth for "the last
+  // chart actually played" and is already persisted/restored with the strip.
+  function getLastTry(){
+    return triesLog.length ? triesLog[triesLog.length - 1] : undefined;
   }
 
   function scrollToEnd(){
@@ -183,6 +217,7 @@
     resolveTry: resolveTry,
     reset: reset,
     getTries: getTries,
+    getLastTry: getLastTry,
     restore: restore,
     scrollToEnd: scrollToEnd
   };

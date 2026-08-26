@@ -101,6 +101,106 @@
     }, 480);
   }
 
+  // Like wheelText, but slides a whole freshly-built element in/out instead of
+  // plain text — used where the sliding "digit" is itself an entire styled node
+  // (e.g. the level ball, shape/shadow/gradient and all) rather than a text run.
+  // `el` is a plain mask that always stays sized to the node's own natural
+  // dimensions (never padded), so it never pushes surrounding layout around —
+  // the padded clip region used for the slide lives in a separate absolutely
+  // positioned overlay that sits outside the document flow entirely.
+  // key: identifies the content for change-detection (compared like wheelText's
+  // `text` param). buildNode: called to construct the new node fresh each time.
+  // padding: extra pixels around the sliding nodes inside that clip overlay, so
+  // a node's own glow (box-shadow/filter bleeding past its box) can fade out
+  // before it reaches the clip edge instead of being cut off square.
+  function wheelNode(el, key, buildNode, direction, force, padding){
+    padding = padding || 0;
+
+    var clipEl = el.querySelector(".wheel-clip");
+    if (clipEl){
+      window.clearTimeout(el._wheelTimer);
+      var kids = clipEl.children;
+      var keep = kids[kids.length - 1];
+      if (keep){
+        keep.style.position = "";
+        keep.style.top = "";
+        keep.style.left = "";
+        keep.style.transform = "";
+        keep.style.transition = "";
+        el.appendChild(keep);
+      }
+      clipEl.remove();
+      el.style.width = "";
+      el.style.height = "";
+      el.style.position = "";
+    }
+
+    if (el.dataset.wheelKey === key && !force) return;
+
+    var oldNode = el.firstElementChild;
+    var newNode = buildNode();
+    el.dataset.wheelKey = key;
+
+    if (!oldNode){
+      el.appendChild(newNode);
+      return;
+    }
+
+    var width = oldNode.offsetWidth;
+    var height = oldNode.offsetHeight;
+
+    // Freeze el's own box to the resting node's size before pulling that node
+    // out of normal flow, so el doesn't collapse while the swap is in flight.
+    el.style.width = width + "px";
+    el.style.height = height + "px";
+    el.style.position = "relative";
+
+    clipEl = document.createElement("div");
+    clipEl.className = "wheel-clip";
+    clipEl.style.position = "absolute";
+    clipEl.style.top = (-padding) + "px";
+    clipEl.style.left = (-padding) + "px";
+    clipEl.style.width = (width + padding * 2) + "px";
+    clipEl.style.height = (height + padding * 2) + "px";
+    clipEl.style.overflow = "hidden";
+
+    [oldNode, newNode].forEach(function(node){
+      node.style.position = "absolute";
+      node.style.top = padding + "px";
+      node.style.left = padding + "px";
+      node.style.transition = "transform 480ms cubic-bezier(0.22,0.61,0.36,1)";
+    });
+    clipEl.appendChild(oldNode);
+    clipEl.appendChild(newNode);
+    el.appendChild(clipEl);
+
+    var enterFrom = direction === -1 ? "100%" : "-100%";
+    var exitTo = direction === -1 ? "-100%" : "100%";
+    oldNode.style.transform = "translateY(0%)";
+    newNode.style.transform = "translateY(" + enterFrom + ")";
+
+    void el.offsetWidth; // reflow before animating to final positions
+
+    requestAnimationFrame(function(){
+      oldNode.style.transform = "translateY(" + exitTo + ")";
+      newNode.style.transform = "translateY(0%)";
+    });
+
+    el._wheelTimer = window.setTimeout(function(){
+      if (oldNode.parentNode === clipEl) clipEl.removeChild(oldNode);
+      newNode.style.position = "";
+      newNode.style.top = "";
+      newNode.style.left = "";
+      newNode.style.transform = "";
+      newNode.style.transition = "";
+      clipEl.remove();
+      el.appendChild(newNode);
+      el.style.width = "";
+      el.style.height = "";
+      el.style.position = "";
+    }, 480);
+  }
+
   function animateCount(el, from, to, duration, formatHtml){
     formatHtml = formatHtml || formatScoreHtml;
     var myId = (countTokens.get(el) || 0) + 1;
@@ -128,6 +228,26 @@
     requestAnimationFrame(step);
   }
 
+  // Builds the chart-type/level "ball" badge: shape, color fill and its type/level
+  // text. extraClass (e.g. "level-ball--mini") lets callers get a smaller variant
+  // via CSS without duplicating this markup.
+  function buildLevelBall(typeWord, levelText, isDoubles, extraClass){
+    var ball = document.createElement("div");
+    ball.className = "level-ball" + (isDoubles ? " type-doubles" : "") + (extraClass ? " " + extraClass : "");
+
+    var typeEl = document.createElement("span");
+    typeEl.className = "level-ball-type";
+    typeEl.textContent = typeWord;
+
+    var valueEl = document.createElement("span");
+    valueEl.className = "level-ball-value";
+    valueEl.textContent = levelText;
+
+    ball.appendChild(typeEl);
+    ball.appendChild(valueEl);
+    return ball;
+  }
+
   window.UiTools = {
     formatScore: formatScore,
     formatScoreHtml: formatScoreHtml,
@@ -135,6 +255,8 @@
     burstGlow: burstGlow,
     splash: splash,
     wheelText: wheelText,
+    wheelNode: wheelNode,
+    buildLevelBall: buildLevelBall,
     animateCount: animateCount
   };
 })(window);

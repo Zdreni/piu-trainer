@@ -248,10 +248,6 @@
     levels: { singles: null, doubles: null, random: null },
     attemptIndex: 0
   };
-  // The AV of the last chart actually tried (pass or fail). Navigating around
-  // (level up/down, mode switch, reroll) compares against this without moving
-  // it, so browsing back to a level you haven't re-tried doesn't re-highlight.
-  var avBaseline;
 
   function currentLevel(){
     return sessionState.mode === null ? null : sessionState.levels[sessionState.mode];
@@ -275,20 +271,23 @@
     return currentTypeLetter() === "S" ? config.avSingles : config.avDoubles;
   }
 
+  // The AV for an arbitrary "S15"/"D15"-style label, regardless of what's
+  // currently being played — used to look up the AV of the last chart actually
+  // tried (see SessionTriesHistory.getLastTry), which doubles as the highlight
+  // baseline without needing separate state of our own to track and persist.
+  function avForLabel(label){
+    if (!label) return undefined;
+    var config = getConfig(label.slice(1));
+    if (!config) return undefined;
+    return label.charAt(0) === "S" ? config.avSingles : config.avDoubles;
+  }
+
   function getMode(){
     return sessionState.mode;
   }
 
   function getAttemptIndex(){
     return sessionState.attemptIndex;
-  }
-
-  function getAvBaseline(){
-    return avBaseline;
-  }
-
-  function setAvBaseline(value){
-    avBaseline = value;
   }
 
   // Clamps attemptIndex into the valid range for a level's raw scores table
@@ -338,7 +337,6 @@
     sessionState.mode = "random";
     sessionState.currentType = Math.random() < 0.5 ? "S" : "D";
     sessionState.attemptIndex = 0;
-    avBaseline = undefined;
   }
 
   // Clears all session state back to the setup screen's starting point.
@@ -347,7 +345,6 @@
     sessionState.currentType = null;
     sessionState.levels = { singles: null, doubles: null, random: null };
     sessionState.attemptIndex = 0;
-    avBaseline = undefined;
   }
 
   // Restores session state saved before the last page reload.
@@ -397,10 +394,9 @@
     currentTypeLetter: currentTypeLetter,
     currentLabel: currentLabel,
     currentAv: currentAv,
+    avForLabel: avForLabel,
     getMode: getMode,
     getAttemptIndex: getAttemptIndex,
-    getAvBaseline: getAvBaseline,
-    setAvBaseline: setAvBaseline,
     clampAttemptIndex: clampAttemptIndex,
     startAt: startAt,
     switchMode: switchMode,
