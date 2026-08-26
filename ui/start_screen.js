@@ -69,6 +69,7 @@
   startLevelUpBtn.addEventListener("click", function(){ stepLevel(1); });
 
   function backToSetup(){
+    if (TrainingSession.hasTries() && !window.confirm("Finish this practice session?")) return;
     startLevelInput.value = LevelModel.readStoredWarmupLevel();
     TrainingSession.resetToSetup();
   }

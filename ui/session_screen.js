@@ -311,6 +311,7 @@
     render: render,
     getCurrentLevel: SessionModel.currentLevel,
     resetSessionHistory: SessionTriesHistory.reset,
-    resetToSetup: resetToSetup
+    resetToSetup: resetToSetup,
+    hasTries: function(){ return SessionTriesHistory.getTries().length > 0; }
   };
 })(window);
