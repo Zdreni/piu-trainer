@@ -105,7 +105,7 @@
     pendingCellEl.classList.remove("pending");
     pendingCellEl.classList.add(success ? "pass" : "fail");
 
-    pendingStatusEl.textContent = success ? "Done" : "Fail";
+    pendingStatusEl.textContent = success ? "Pass" : "Fail";
     pendingStatusEl.classList.remove("try-cell-status");
     void pendingStatusEl.offsetWidth; // reflow to restart the entrance animation
     pendingStatusEl.classList.add("try-cell-status");

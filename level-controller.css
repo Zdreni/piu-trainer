@@ -4,8 +4,8 @@
   --bg-panel-2:#171b28;
   --line:rgba(255,255,255,0.08);
   --brand-accent:#ff3d7f;
-  --pink:#c1121f;
-  --pink-dim:rgba(193,18,31,0.35);
+  --pink:#c53a1f;
+  --pink-dim:rgba(197,58,31,0.35);
   --cyan:#2fe6d8;
   --cyan-dim:rgba(47,230,216,0.35);
   --yellow:#ff8a3d;
@@ -166,7 +166,7 @@ body{
   font-size:clamp(4.8rem, 24vw, 8rem);
   line-height:1;
   letter-spacing:-0.03em;
-  background:linear-gradient(180deg, #cd4d4f 0%, var(--pink) 120%);
+  background:linear-gradient(180deg, #d5613f 0%, var(--pink) 120%);
   -webkit-background-clip:text;
   background-clip:text;
   color:transparent;
@@ -260,7 +260,7 @@ body{
 #modeRandomBtn{color:var(--cyan);}
 
 .mode-btn.is-active{
-  background:linear-gradient(180deg, var(--pink) 0%, rgba(255,61,127,0.55) 150%);
+  background:linear-gradient(180deg, var(--pink) 0%, rgba(213,97,63,0.55) 150%);
   border-color:var(--pink);
   color:var(--text-hi);
 }
@@ -395,11 +395,11 @@ body{
 .try-cell.pass{
   border-color:rgba(92,230,148,0.18);
 }
-.try-cell.pass .try-cell-status{color:#8a9c94;}
+.try-cell.pass .try-cell-status, .try-cell.pass .try-cell-score{color:#98a49e;}
 .try-cell.fail{
   border-color:rgba(255,71,87,0.16);
 }
-.try-cell.fail .try-cell-status{color:#a01f2b;}
+.try-cell.fail .try-cell-status, .try-cell.fail .try-cell-score{color:#a92f3c;}
 .try-cell.fail .try-cell-score{text-decoration:line-through;}
 
 .rec-av{
