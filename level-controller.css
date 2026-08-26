@@ -163,7 +163,7 @@ body{
   font-family:var(--font-mono);
   font-weight:800;
   font-variant-numeric:tabular-nums;
-  font-size:clamp(6.2rem, 32vw, 11.5rem);
+  font-size:clamp(4.8rem, 24vw, 8rem);
   line-height:1;
   letter-spacing:-0.03em;
   background:linear-gradient(180deg, #f0b3ae 0%, var(--pink) 120%);
@@ -192,7 +192,7 @@ body{
   font-variant-numeric:tabular-nums;
   font-size:clamp(4.8rem, 24vw, 8rem);
   line-height:1;
-  letter-spacing:-0.02em;
+  letter-spacing:-0.06em;
   background:linear-gradient(180deg, #f0b48a 0%, var(--yellow) 120%);
   -webkit-background-clip:text;
   background-clip:text;
@@ -205,6 +205,7 @@ body{
      darker, flat color here instead of counting on alpha blending. */
   color:#7a4020;
   opacity:1;
+  font-size:0.467em;
 }
 
 /* ---------- layout sections ---------- */
@@ -407,7 +408,7 @@ body{
   justify-content:center;
   width:fit-content;
   margin:0.3rem auto 0;
-  padding:0.35rem 2rem;
+  padding:0.18rem 5.4rem;
   border-radius:999px;
   background:#000;
   border:1px solid var(--line);
