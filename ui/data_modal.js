@@ -119,6 +119,7 @@
         LevelModel.saveLevelData(importedLevels);
         closeDataModal();
         if (hooks.getCurrentLevel() !== null) hooks.render();
+        else window.showScreen("setup");
         return;
       }
 

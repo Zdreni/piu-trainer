@@ -5,6 +5,10 @@
   var WARMUP_LEVEL_KEY = "piuTrainerWarmupLevel";
   var SESSION_KEY = "piuTrainerSessionState";
 
+  var MIN_LEVEL = 1;
+  var MAX_LEVEL = 28;
+  var DEFAULT_WARMUP_LEVEL = 10;
+
   // Merges each explicitly-listed level's config forward onto the next
   // (so a level entry only needs to specify what changed since the one below it).
   function fillGaps(raw){
@@ -80,7 +84,7 @@
     try {
       var raw = localStorage.getItem(WARMUP_LEVEL_KEY);
       var val = parseInt(raw, 10);
-      return Number.isFinite(val) && val >= 1 ? val : null;
+      return Number.isFinite(val) && val >= MIN_LEVEL ? val : null;
     } catch (e){
       return null;
     }
@@ -213,7 +217,7 @@
   // subsequent try forever (resolveScores keeps subtracting the trailing -5).
   function createDefaultLevelData(level){
     var raw = {};
-    raw[String(level)] = { scores: [990, -5] };
+    raw[String(level)] = { scores: [990, -10] };
     return raw;
   }
 
@@ -221,6 +225,9 @@
   if (initialStoredRawData) setActiveData(initialStoredRawData);
 
   window.LevelModel = {
+    MIN_LEVEL: MIN_LEVEL,
+    MAX_LEVEL: MAX_LEVEL,
+    DEFAULT_WARMUP_LEVEL: DEFAULT_WARMUP_LEVEL,
     validateLevelData: validateLevelData,
     readStoredWarmupLevel: readStoredWarmupLevel,
     saveWarmupLevel: saveWarmupLevel,

@@ -11,12 +11,20 @@
   var noDataEl = document.getElementById("noData");
   var restartBtn = document.getElementById("restartBtn");
   var fullscreenBtn = document.getElementById("fullscreenBtn");
+  var importBtn = document.getElementById("importBtn");
+  var viewDataBtn = document.getElementById("viewDataBtn");
 
   function showScreen(name){
     setupEl.hidden = name !== "setup";
     playEl.hidden = name !== "play";
     noDataEl.hidden = name !== "noData";
     restartBtn.classList.toggle("is-hidden", name === "setup");
+    if (name === "setup"){
+      var hasData = !!LevelModel.getActiveRawData();
+      importBtn.hidden = hasData;
+      viewDataBtn.hidden = !hasData;
+      StartScreen.refreshControls();
+    }
   }
   window.showScreen = showScreen;
 

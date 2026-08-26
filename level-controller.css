@@ -604,10 +604,17 @@ body{
   display:flex;
   flex-direction:column;
   align-items:center;
-  justify-content:center;
   gap:1.2rem;
   padding:1.5rem;
   text-align:center;
+}
+.setup-main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1.2rem;
 }
 .setup .field{
   display:flex;
@@ -642,6 +649,19 @@ body{
   font-weight:600;
   color:var(--text-low);
 }
+.setup input[type="number"]::-webkit-inner-spin-button,
+.setup input[type="number"]::-webkit-outer-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+.setup input[type="number"]{
+  -moz-appearance:textfield;
+}
+.level-input-row{
+  display:flex;
+  align-items:center;
+  gap:0.7rem;
+}
 .setup button{
   font-family:var(--font-display);
   font-weight:800;
@@ -656,6 +676,12 @@ body{
   cursor:pointer;
 }
 .setup button:active{transform:scale(0.96);}
+.setup button:disabled{
+  opacity:0.35;
+  box-shadow:none;
+  cursor:not-allowed;
+}
+.setup button:disabled:active{transform:none;}
 .hint{
   max-width:320px;
   font-size:0.78rem;
@@ -695,6 +721,15 @@ body{
   cursor:pointer;
 }
 .setup .io-btn:active{transform:scale(0.96);}
+.setup .level-step-btn{
+  flex:0 0 auto;
+  width:2.6rem;
+  padding:0.55rem 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1rem;
+}
 
 /* ---------- data import / view-edit modal ---------- */
 .modal-overlay{

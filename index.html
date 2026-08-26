@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="level-controller.css?v=131">
+<link rel="stylesheet" href="level-controller.css?v=136">
 </head>
 <body>
 
@@ -23,12 +23,18 @@
 
     <!-- SETUP SCREEN -->
     <section class="setup" id="setup" hidden>
-      <div class="field">
-        <label for="startLevelInput">Start at level</label>
-        <input type="number" id="startLevelInput" placeholder="e.g. 14" min="1" inputmode="numeric">
+      <div class="setup-main">
+        <div class="field">
+          <label for="startLevelInput">Warm-up at level</label>
+          <div class="level-input-row">
+            <button type="button" class="io-btn level-step-btn" id="startLevelDownBtn" title="Decrease level" aria-label="Decrease level">&#8722;</button>
+            <input type="number" id="startLevelInput" placeholder="e.g. 14" min="1" inputmode="numeric">
+            <button type="button" class="io-btn level-step-btn" id="startLevelUpBtn" title="Increase level" aria-label="Increase level">&#43;</button>
+          </div>
+        </div>
+        <button id="startBtn">Go</button>
+        <p class="error" id="setupError" hidden>Enter a valid level number.</p>
       </div>
-      <button id="startBtn">Go</button>
-      <p class="error" id="setupError" hidden>Enter a valid level number.</p>
       <div class="io-row">
         <button type="button" class="io-btn" id="importBtn">Import JSON</button>
         <button type="button" class="io-btn" id="viewDataBtn">View / Edit Data</button>
@@ -113,13 +119,13 @@
 
   </div>
 
-  <script src="model.js?v=8"></script>
+  <script src="model.js?v=9"></script>
   <script src="ui/tools.js?v=7"></script>
   <script src="ui/session_tries_history.js?v=13"></script>
   <script src="ui/session_screen.js?v=29"></script>
-  <script src="ui/start_screen.js?v=3"></script>
-  <script src="ui/data_modal.js?v=2"></script>
-  <script src="app.js?v=31"></script>
+  <script src="ui/start_screen.js?v=10"></script>
+  <script src="ui/data_modal.js?v=3"></script>
+  <script src="app.js?v=33"></script>
 
 </body>
 </html>
