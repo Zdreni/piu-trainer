@@ -21,7 +21,7 @@
     restartBtn.classList.toggle("is-hidden", name === "setup");
     if (name === "setup"){
       var hasData = !!LevelModel.getActiveRawData();
-      importBtn.hidden = hasData;
+      importBtn.hidden = false;
       viewDataBtn.hidden = !hasData;
       StartScreen.refreshControls();
     }
