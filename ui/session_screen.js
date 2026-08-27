@@ -3,41 +3,11 @@
 
   var LevelModel = window.LevelModel;
   var SessionModel = window.SessionModel;
-  var UiTools = window.UiTools;
   var SessionTriesHistory = window.SessionTriesHistory;
-
-  // Cached last-rendered display values, used only to decide which pieces
-  // need a change animation on the next render.
-  var lastLevelText = null;
-  var lastLevelValue = null;
-  var lastTargetText = null;
-  var lastTargetValue = null;
-  var lastAvText = null;
-  var lastAvValue = null;
+  var SessionChartLevel = window.SessionChartLevel;
+  var SessionTryScoreTarget = window.SessionTryScoreTarget;
 
   // ---- DOM refs ----
-  var playEl = document.getElementById("play");
-
-  var modeSinglesBtn = document.getElementById("modeSinglesBtn");
-  var modeDoublesBtn = document.getElementById("modeDoublesBtn");
-  var modeRandomBtn = document.getElementById("modeRandomBtn");
-
-  var levelNumberEl = document.getElementById("levelNumber");
-  var levelBurstEl = document.getElementById("levelBurst");
-  var recAvBoxEl = document.querySelector(".rec-av");
-  var recAvEl = document.getElementById("recAv");
-  var targetNumberEl = document.getElementById("targetNumber");
-  var targetBurstEl = document.getElementById("targetBurst");
-
-  var failBtn = document.getElementById("failBtn");
-  var passBtn = document.getElementById("passBtn");
-  var levelDownBtn = document.getElementById("levelDownBtn");
-  var levelUpBtn = document.getElementById("levelUpBtn");
-
-  var noDataLevelEl = document.getElementById("noDataLevel");
-  var jumpInput = document.getElementById("jumpInput");
-  var jumpBtn = document.getElementById("jumpBtn");
-
   var flowGapEl = document.getElementById("flowGap");
 
   function makeFlowChevron(){
@@ -48,35 +18,6 @@
   }
 
   // ---- helpers ----
-  function pulse(el){
-    el.classList.remove("av-pulse");
-    void el.offsetWidth; // reflow to restart animation
-    el.classList.add("av-pulse");
-    el.addEventListener("animationend", function handler(){
-      el.classList.remove("av-pulse");
-      el.removeEventListener("animationend", handler);
-    });
-  }
-
-  // Vertically centers the level +/- buttons on the level indicator (horizontal position
-  // is fixed via CSS at the column's side borders). Uses getBoundingClientRect (not
-  // offsetTop) because .number-wrap is itself position:relative, which would otherwise
-  // skew levelNumberEl's offset to be relative to that narrow wrapper instead of .play.
-  function positionLevelNavButtons(){
-    var playRect = playEl.getBoundingClientRect();
-    var numRect = levelNumberEl.getBoundingClientRect();
-    var centerY = numRect.top - playRect.top + numRect.height / 2;
-
-    levelDownBtn.style.top = centerY + "px";
-    levelUpBtn.style.top = centerY + "px";
-  }
-
-  // Matches the recommended-AV badge's width to the level number above it
-  // (so it tracks the number's digit count).
-  function positionRecAv(){
-    recAvBoxEl.style.width = levelNumberEl.parentElement.getBoundingClientRect().width + "px";
-  }
-
   // Shows only as many route chevrons as fit in the gap between the AV badge
   // and the target score, hiding the ones closest to the score first — so
   // they never overlap each other or bleed into the score below on short
@@ -103,31 +44,21 @@
     for (var j = current; j > count; j--) flowGapEl.removeChild(flowGapEl.lastElementChild);
   }
 
-  // These three only make sense while the play screen is actually showing
+  // These three only make sense while the session screen is actually showing
   // (they measure/position elements inside it), so the resize listener is
-  // only attached while playing, rather than always-on with an internal
-  // "am I even visible" guard.
-  function enablePlayResizeHandlers(){
-    window.addEventListener("resize", positionLevelNavButtons);
-    window.addEventListener("resize", positionRecAv);
+  // only attached while it's the visible screen, rather than always-on with
+  // an internal "am I even visible" guard. Exposed as TrainingSession's
+  // onShow/onHide, which window.showScreen invokes on screen transitions.
+  function enableSessionResizeHandlers(){
+    window.addEventListener("resize", SessionChartLevel.positionNavButtons);
+    window.addEventListener("resize", SessionChartLevel.positionRecAv);
     window.addEventListener("resize", layoutFlowChevrons);
   }
 
-  function disablePlayResizeHandlers(){
-    window.removeEventListener("resize", positionLevelNavButtons);
-    window.removeEventListener("resize", positionRecAv);
+  function disableSessionResizeHandlers(){
+    window.removeEventListener("resize", SessionChartLevel.positionNavButtons);
+    window.removeEventListener("resize", SessionChartLevel.positionRecAv);
     window.removeEventListener("resize", layoutFlowChevrons);
-  }
-
-  function updateLevelNavButtons(){
-    levelDownBtn.classList.toggle("is-disabled", !LevelModel.canDecreaseLevel(SessionModel.currentLevel()));
-  }
-
-  function updateModeButtons(){
-    var mode = SessionModel.getMode();
-    modeSinglesBtn.classList.toggle("is-active", mode === "singles");
-    modeDoublesBtn.classList.toggle("is-active", mode === "doubles");
-    modeRandomBtn.classList.toggle("is-active", mode === "random");
   }
 
   function persistSession(){
@@ -146,109 +77,27 @@
   // session's first render (where there's no previous value to diff against,
   // but everything should still animate in rather than just appear).
   function render(forceAnim){
-    var level = SessionModel.currentLevel();
-    var config = LevelModel.getConfig(level);
+    var config = LevelModel.getConfig(SessionModel.currentLevel());
 
-    var newLevelText = SessionModel.currentLabel();
-    var levelChanged = lastLevelText !== null && newLevelText !== lastLevelText;
-    var isDoubles = SessionModel.currentTypeLetter() === "D";
-    var typeWord = isDoubles ? "Double" : "Single";
-    levelBurstEl.classList.toggle("type-doubles", isDoubles);
-
+    // The level data table shouldn't have gaps the session can actually land
+    // on (nav/mode controls are gated against that), but if one somehow shows
+    // up, there's nothing sensible to render — bail out to setup instead.
     if (!config){
-      UiTools.settleWheel(levelNumberEl);
-      levelNumberEl.innerHTML = "";
-      levelNumberEl.appendChild(UiTools.buildLevelBall(typeWord, String(level), isDoubles));
-      levelNumberEl.dataset.wheelKey = newLevelText;
-      noDataLevelEl.textContent = newLevelText;
-      jumpInput.value = level;
-      window.showScreen("noData");
-      disablePlayResizeHandlers();
-      lastLevelText = newLevelText;
-      lastLevelValue = level;
-      lastTargetText = null;
-      lastTargetValue = null;
-      updateLevelNavButtons();
-      updateModeButtons();
-      persistSession();
+      resetToSetup();
       return;
     }
 
-    var rawScores = config.scores || [];
-    SessionModel.clampAttemptIndex(rawScores);
-    var attemptIndex = SessionModel.getAttemptIndex();
-    var extendable = rawScores.length > 0 && rawScores[rawScores.length - 1] < 0;
+    SessionChartLevel.renderAv(forceAnim);
 
-    var scores = LevelModel.resolveScores(rawScores, Math.max(rawScores.length, attemptIndex + (extendable ? 2 : 1)));
-    var target = scores[attemptIndex];
-    var newTargetText = UiTools.formatScore(target);
-    var targetChanged = lastTargetText !== null && newTargetText !== lastTargetText;
+    SessionTriesHistory.showPending(SessionModel.currentLabel(), SessionTryScoreTarget.getCurrentTarget());
 
-    var avValue = SessionModel.currentAv(config);
-    var newAvText = avValue === undefined ? "N/A" : UiTools.formatAv(avValue);
-    var avTextChanged = lastAvText !== null && newAvText !== lastAvText;
-    recAvBoxEl.hidden = avValue === undefined;
-    if (avValue === undefined){
-      recAvEl.textContent = "N/A";
-      recAvEl.classList.add("is-na");
-      recAvEl.classList.remove("is-unchanged");
-    } else {
-      recAvEl.classList.remove("is-na");
-      if (avTextChanged || forceAnim){
-        var avFrom = (lastAvValue !== null && lastAvValue !== undefined) ? lastAvValue : 0;
-        UiTools.animateCount(recAvEl, avFrom, avValue, 600, UiTools.formatAv);
-      } else {
-        recAvEl.innerHTML = UiTools.formatAv(avValue);
-      }
-      // Until a chart's actually been tried there's no baseline to compare
-      // against yet, so stay highlighted rather than defaulting to dimmed.
-      var lastTry = SessionTriesHistory.getLastTry();
-      var avBaseline = lastTry ? SessionModel.avForLabel(lastTry.level) : undefined;
-      var avHighlighted = avBaseline === undefined || avValue !== avBaseline;
-      recAvEl.classList.toggle("is-unchanged", !avHighlighted);
-      if (avTextChanged && avHighlighted) pulse(recAvEl);
-    }
-    lastAvText = newAvText;
-    lastAvValue = avValue;
+    window.showScreen("session");
 
-    SessionTriesHistory.showPending(newLevelText, target);
+    SessionChartLevel.render(forceAnim);
+    SessionTryScoreTarget.render(forceAnim);
 
-    if (targetChanged || levelChanged || forceAnim){
-      UiTools.animateCount(targetNumberEl, lastTargetValue !== null ? lastTargetValue : 0, target, 600);
-    } else {
-      targetNumberEl.innerHTML = UiTools.formatScoreHtml(target);
-    }
-    window.showScreen("play");
-    enablePlayResizeHandlers();
-
-    var animateLevel = levelChanged || forceAnim;
-    if (animateLevel){
-      var levelDirection = (lastLevelValue !== null && level < lastLevelValue) ? -1 : 1;
-      // No padding: the ball sits close enough to the mode buttons and AV badge
-      // above/below that any padded glow bleed during the slide overlaps them.
-      // Clipping flush to the ball's own edge hides the glow while it's moving
-      // and lets it reappear cleanly once the new ball settles.
-      UiTools.wheelNode(levelNumberEl, newLevelText, function(){
-        return UiTools.buildLevelBall(typeWord, String(level), isDoubles);
-      }, levelDirection, forceAnim && !levelChanged, 0);
-      UiTools.burstGlow(levelBurstEl);
-    } else {
-      UiTools.settleWheel(levelNumberEl);
-      levelNumberEl.innerHTML = "";
-      levelNumberEl.appendChild(UiTools.buildLevelBall(typeWord, String(level), isDoubles));
-      levelNumberEl.dataset.wheelKey = newLevelText;
-    }
-    if (targetChanged || levelChanged || forceAnim) UiTools.splash(targetNumberEl, targetBurstEl);
-
-    lastLevelText = newLevelText;
-    lastLevelValue = level;
-    lastTargetText = newTargetText;
-    lastTargetValue = target;
-
-    updateLevelNavButtons();
-    updateModeButtons();
-    positionLevelNavButtons();
-    positionRecAv();
+    SessionChartLevel.positionNavButtons();
+    SessionChartLevel.positionRecAv();
     layoutFlowChevrons();
     persistSession();
   }
@@ -281,16 +130,11 @@
 
   function resetToSetup(){
     SessionModel.resetSession();
-    lastLevelText = null;
-    lastLevelValue = null;
-    lastTargetText = null;
-    lastTargetValue = null;
-    lastAvText = null;
-    lastAvValue = null;
+    SessionChartLevel.reset();
+    SessionTryScoreTarget.reset();
     SessionTriesHistory.reset();
     LevelModel.finishSessionState();
     window.showScreen("setup");
-    disablePlayResizeHandlers();
   }
 
   // Resumes a session saved before the last page reload: restores the tries
@@ -298,61 +142,39 @@
   // on-screen value to animate from).
   function resume(savedState){
     SessionModel.resumeSession(savedState);
+    // The only place attemptIndex is set from an unvalidated source (storage,
+    // possibly stale against the currently-loaded level data) rather than
+    // already being kept in range by SessionModel's own mutators.
+    var config = LevelModel.getConfig(SessionModel.currentLevel());
+    if (config) SessionModel.clampAttemptIndex(config.scores || []);
     SessionTriesHistory.restore(savedState.tries);
     render();
     SessionTriesHistory.scrollToEnd();
   }
 
   // ---- events ----
-  passBtn.addEventListener("click", function(){
-    SessionTriesHistory.resolveTry(SessionModel.currentLabel(), true);
-    SessionModel.recordPass();
-    render();
-  });
-
-  failBtn.addEventListener("click", function(){
-    var config = LevelModel.getConfig(SessionModel.currentLevel());
-    if (!config) return;
-    SessionTriesHistory.resolveTry(SessionModel.currentLabel(), false);
-    SessionModel.recordFail(config);
-    render();
-  });
-
-  levelDownBtn.addEventListener("click", function(){
-    if (!LevelModel.canDecreaseLevel(SessionModel.currentLevel())) return;
-    startAt(SessionModel.currentLevel() - 1);
-  });
-
-  levelUpBtn.addEventListener("click", function(){
-    if (SessionModel.currentLevel() === null) return;
-    startAt(SessionModel.currentLevel() + 1);
-  });
-
-  modeSinglesBtn.addEventListener("click", function(){
-    if (SessionModel.getMode() === "singles") return;
-    switchMode("singles");
-  });
-
-  modeDoublesBtn.addEventListener("click", function(){
-    if (SessionModel.getMode() === "doubles") return;
-    switchMode("doubles");
-  });
-
-  modeRandomBtn.addEventListener("click", function(){
-    if (SessionModel.getMode() !== "random"){
-      switchMode("random");
-    } else {
-      rerollRandom();
+  SessionTryScoreTarget.init({
+    onPass: function(){
+      SessionTriesHistory.resolveTry(SessionModel.currentLabel(), true);
+      SessionModel.recordPass();
+      render();
+    },
+    onFail: function(){
+      var config = LevelModel.getConfig(SessionModel.currentLevel());
+      if (!config){
+        resetToSetup();
+        return;
+      }
+      SessionTriesHistory.resolveTry(SessionModel.currentLabel(), false);
+      SessionModel.recordFail(config);
+      render();
     }
   });
 
-  jumpBtn.addEventListener("click", function(){
-    var val = parseInt(jumpInput.value, 10);
-    if (!Number.isFinite(val) || val < 1) return;
-    startAt(val);
-  });
-  jumpInput.addEventListener("keydown", function(e){
-    if (e.key === "Enter") jumpBtn.click();
+  SessionChartLevel.init({
+    onStepLevel: function(delta){ startAt(SessionModel.currentLevel() + delta); },
+    onSwitchMode: switchMode,
+    onRerollRandom: rerollRandom
   });
 
   window.TrainingSession = {
@@ -362,6 +184,8 @@
     getCurrentLevel: SessionModel.currentLevel,
     resetSessionHistory: SessionTriesHistory.reset,
     resetToSetup: resetToSetup,
-    hasTries: function(){ return SessionTriesHistory.getTries().length > 0; }
+    hasTries: function(){ return SessionTriesHistory.getTries().length > 0; },
+    onShow: enableSessionResizeHandlers,
+    onHide: disableSessionResizeHandlers
   };
 })(window);

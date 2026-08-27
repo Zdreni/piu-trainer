@@ -4,7 +4,8 @@
   // Wires up the "Finish this practice session?" confirm modal, shown from
   // the header's restart button when the session has logged tries worth
   // losing. `hooks.onConfirm()` runs once the user actually confirms (or
-  // immediately, with no modal, when there's nothing to lose).
+  // immediately, with no modal, when the caller determines there's nothing
+  // to lose).
   function init(hooks){
     var TrainingSession = window.TrainingSession;
 
@@ -18,15 +19,17 @@
     }
 
     function requestFinish(){
-      if (!TrainingSession.hasTries()){
-        hooks.onConfirm();
-        return;
-      }
       finishModal.hidden = false;
       cancelFinishBtn.focus();
     }
 
-    restartBtn.addEventListener("click", requestFinish);
+    restartBtn.addEventListener("click", function(){
+      if (TrainingSession.hasTries()){
+        requestFinish();
+      } else {
+        hooks.onConfirm();
+      }
+    });
 
     confirmFinishBtn.addEventListener("click", function(){
       closeFinishModal();

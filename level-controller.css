@@ -746,8 +746,7 @@ body{
   color:var(--text-low);
   line-height:1.5;
 }
-.hint code,
-.no-data code{
+.hint code{
   color:var(--text-mid);
   background:var(--bg-panel);
   padding:0.1em 0.4em;
@@ -895,58 +894,6 @@ body{
   border:1px solid color-mix(in srgb, var(--red) 15%, var(--line));
 }
 
-/* ---------- no-data banner ---------- */
-.no-data{
-  position:relative;
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:1rem;
-  padding:1.5rem;
-  text-align:center;
-}
-.no-data p{
-  color:var(--text-mid);
-  font-size:0.85rem;
-  max-width:320px;
-  line-height:1.5;
-  margin:0;
-}
-.no-data .jump-row{
-  display:flex;
-  gap:0.5rem;
-  align-items:center;
-}
-.no-data input[type="number"]{
-  font-family:var(--font-mono);
-  font-size:1.4rem;
-  font-weight:800;
-  width:4.5rem;
-  text-align:center;
-  background:var(--bg-panel);
-  border:1px solid var(--line);
-  border-radius:10px;
-  color:var(--cyan);
-  padding:0.4rem 0;
-}
-.no-data button{
-  font-family:var(--font-display);
-  font-weight:800;
-  letter-spacing:0.08em;
-  text-transform:uppercase;
-  padding:0.6rem 1.1rem;
-  border:none;
-  border-radius:10px;
-  background:var(--cyan);
-  color:var(--bg-void);
-  cursor:pointer;
-}
-.no-data-level{
-  font-size:clamp(3rem, 16vw, 5rem);
-}
-
 /* ---------- history screen ---------- */
 .history{
   flex:1;
@@ -1044,8 +991,8 @@ body{
 .level-nav-left{left:1rem;}
 .level-nav-right{right:1rem;}
 
-/* ---------- play screen ---------- */
-.play{
+/* ---------- session screen ---------- */
+.session{
   position:relative;
   flex:1;
   display:flex;

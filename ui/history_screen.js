@@ -3,6 +3,7 @@
 
   var LevelModel = window.LevelModel;
   var SessionTriesHistory = window.SessionTriesHistory;
+  var UiTools = window.UiTools;
 
   var historyListEl = document.getElementById("historyList");
 
@@ -13,23 +14,6 @@
 
   // startedAt of the session a pending delete confirmation would remove.
   var pendingDeleteStartedAt = null;
-
-  function buildDeleteIcon(){
-    var svgNS = "http://www.w3.org/2000/svg";
-    var svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("width", "1em");
-    svg.setAttribute("height", "1em");
-    svg.setAttribute("fill", "none");
-    svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "2.6");
-    svg.setAttribute("stroke-linecap", "round");
-    svg.setAttribute("aria-hidden", "true");
-    var path = document.createElementNS(svgNS, "path");
-    path.setAttribute("d", "M6 6 L18 18 M18 6 L6 18");
-    svg.appendChild(path);
-    return svg;
-  }
 
   function closeDeleteModal(){
     deleteSessionModal.hidden = true;
@@ -88,7 +72,7 @@
       deleteBtn.className = "history-delete-btn";
       deleteBtn.title = "Delete session";
       deleteBtn.setAttribute("aria-label", "Delete session");
-      deleteBtn.appendChild(buildDeleteIcon());
+      deleteBtn.appendChild(UiTools.buildDeleteIcon());
       deleteBtn.addEventListener("click", function(){
         requestDelete(session.startedAt, dateText);
       });
@@ -109,5 +93,5 @@
     stripEls.forEach(SessionTriesHistory.scrollStripToEnd);
   }
 
-  window.HistoryScreen = { render: render };
+  window.HistoryScreen = { onShow: render };
 })(window);

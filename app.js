@@ -7,34 +7,37 @@
   var HistoryScreen = window.HistoryScreen;
   var LevelModel = window.LevelModel;
 
-  var setupEl = document.getElementById("setup");
-  var playEl = document.getElementById("play");
-  var noDataEl = document.getElementById("noData");
-  var historyEl = document.getElementById("history");
   var restartBtn = document.getElementById("restartBtn");
   var fullscreenBtn = document.getElementById("fullscreenBtn");
-  var importBtn = document.getElementById("importBtn");
-  var viewDataBtn = document.getElementById("viewDataBtn");
   var historyBtn = document.getElementById("historyBtn");
 
+  // Each screen's own onShow/onHide (when it defines them) is invoked as
+  // window.showScreen transitions into or out of it, so this module only
+  // needs to know which element and screen object go with which name.
+  var screens = {
+    setup: { el: document.getElementById("setup"), screen: StartScreen },
+    session: { el: document.getElementById("session"), screen: TrainingSession },
+    history: { el: document.getElementById("history"), screen: HistoryScreen }
+  };
+
+  var currentScreenName = null;
+
   function showScreen(name){
-    setupEl.hidden = name !== "setup";
-    playEl.hidden = name !== "play";
-    noDataEl.hidden = name !== "noData";
-    historyEl.hidden = name !== "history";
+    var current = currentScreenName && screens[currentScreenName];
+    if (current && current.screen && current.screen.onHide) current.screen.onHide();
+
+    Object.keys(screens).forEach(function(key){
+      screens[key].el.hidden = key !== name;
+    });
     restartBtn.classList.toggle("is-hidden", name === "setup");
     var restartLabel = name === "history" ? "Back" : "Finish session";
     restartBtn.title = restartLabel;
     restartBtn.setAttribute("aria-label", restartLabel);
-    if (name === "setup"){
-      var hasData = !!LevelModel.getActiveRawData();
-      importBtn.hidden = false;
-      viewDataBtn.hidden = !hasData;
-      StartScreen.refreshControls();
-    }
-    if (name === "history"){
-      HistoryScreen.render();
-    }
+
+    var next = screens[name];
+    if (next && next.screen && next.screen.onShow) next.screen.onShow();
+
+    currentScreenName = name;
   }
   window.showScreen = showScreen;
 

@@ -9,16 +9,11 @@
   var startLevelUpBtn = document.getElementById("startLevelUpBtn");
   var startBtn = document.getElementById("startBtn");
   var setupError = document.getElementById("setupError");
+  var importBtn = document.getElementById("importBtn");
+  var viewDataBtn = document.getElementById("viewDataBtn");
 
-  var MIN_LEVEL = LevelModel.MIN_LEVEL;
-  var MAX_LEVEL = LevelModel.MAX_LEVEL;
-
-  function inputValue(){
+  function levelInputValue(){
     return parseInt(startLevelInput.value, 10);
-  }
-
-  function isValid(val){
-    return Number.isFinite(val) && val >= MIN_LEVEL;
   }
 
   // A level with no reachable table entry (below the lowest defined level,
@@ -29,16 +24,23 @@
   }
 
   function updateControls(){
-    var val = inputValue();
-    var valid = isValid(val);
-    startLevelDownBtn.disabled = valid && !LevelModel.canDecreaseLevel(val);
-    startLevelUpBtn.disabled = valid && val >= MAX_LEVEL;
+    var val = levelInputValue();
+    var valid = LevelModel.isValidLevel(val);
+    startLevelDownBtn.disabled = valid && !LevelModel.canStepLevel(val, -1);
+    startLevelUpBtn.disabled = valid && !LevelModel.canStepLevel(val, 1);
     startBtn.disabled = !valid || !hasTableData(val);
   }
 
+  function onShow(){
+    var hasData = !!LevelModel.getActiveRawData();
+    importBtn.hidden = false;
+    viewDataBtn.hidden = !hasData;
+    updateControls();
+  }
+
   startBtn.addEventListener("click", function(){
-    var val = inputValue();
-    if (!isValid(val)){
+    var val = levelInputValue();
+    if (!LevelModel.isValidLevel(val)){
       setupError.hidden = false;
       return;
     }
@@ -58,10 +60,7 @@
   startLevelInput.addEventListener("input", updateControls);
 
   function stepLevel(delta){
-    var current = inputValue();
-    var base = isValid(current) ? current : LevelModel.DEFAULT_WARMUP_LEVEL;
-    var next = Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, base + delta));
-    startLevelInput.value = next;
+    startLevelInput.value = LevelModel.stepLevel(levelInputValue(), delta);
     updateControls();
   }
   startLevelDownBtn.addEventListener("click", function(){ stepLevel(-1); });
@@ -81,6 +80,6 @@
 
   window.StartScreen = {
     warmupLevelInput: startLevelInput,
-    refreshControls: updateControls
+    onShow: onShow
   };
 })(window);

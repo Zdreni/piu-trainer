@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="level-controller.css?v=143">
+<link rel="stylesheet" href="level-controller.css?v=144">
 </head>
 <body>
 
@@ -51,8 +51,8 @@
       <div class="history-list" id="historyList"></div>
     </section>
 
-    <!-- PLAY SCREEN -->
-    <section class="play" id="play" hidden>
+    <!-- SESSION SCREEN -->
+    <section class="session" id="session" hidden>
       <button class="level-nav-btn level-nav-left" id="levelDownBtn" title="Decrease level" aria-label="Decrease level">&#8722;</button>
       <button class="level-nav-btn level-nav-right" id="levelUpBtn" title="Increase level" aria-label="Increase level">&#43;</button>
 
@@ -102,17 +102,6 @@
       </div>
     </section>
 
-    <!-- NO DATA SCREEN -->
-    <section class="no-data" id="noData" hidden>
-      <div class="eyebrow">Level</div>
-      <div class="level-number no-data-level" id="noDataLevel">--</div>
-      <p>No table entry for this level yet. Jump to a different level below, or add it via View / Edit Data on the setup screen.</p>
-      <div class="jump-row">
-        <input type="number" id="jumpInput" inputmode="numeric">
-        <button id="jumpBtn">Jump</button>
-      </div>
-    </section>
-
     <!-- DATA IMPORT / VIEW-EDIT MODAL -->
     <div class="modal-overlay" id="dataModal" hidden>
       <div class="modal">
@@ -151,15 +140,17 @@
 
   </div>
 
-  <script src="model.js?v=12"></script>
-  <script src="ui/tools.js?v=7"></script>
+  <script src="model.js?v=17"></script>
+  <script src="ui/tools.js?v=8"></script>
   <script src="ui/session_tries_history.js?v=15"></script>
-  <script src="ui/session_screen.js?v=33"></script>
-  <script src="ui/session_finish_confirmation.js?v=1"></script>
-  <script src="ui/start_screen.js?v=11"></script>
+  <script src="ui/session_chart_level.js?v=5"></script>
+  <script src="ui/session_try_score_target.js?v=4"></script>
+  <script src="ui/session_screen.js?v=43"></script>
+  <script src="ui/session_finish_confirmation.js?v=2"></script>
+  <script src="ui/start_screen.js?v=16"></script>
   <script src="ui/data_modal.js?v=4"></script>
-  <script src="ui/history_screen.js?v=9"></script>
-  <script src="app.js?v=35"></script>
+  <script src="ui/history_screen.js?v=10"></script>
+  <script src="app.js?v=37"></script>
 
 </body>
 </html>

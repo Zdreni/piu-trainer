@@ -306,11 +306,28 @@
     return levelKeys;
   }
 
-  function canDecreaseLevel(level){
-    if (level === null || level <= 1) return false;
-    var lowestLevel = levelKeys && levelKeys.length ? levelKeys[0] : null;
-    if (lowestLevel !== null && level <= lowestLevel) return false;
-    return true;
+  // delta's sign picks the direction to check (magnitude is ignored): negative
+  // for "can this go one lower", positive/zero for "can this go one higher".
+  function canStepLevel(level, delta){
+    if (level === null) return false;
+    if (delta < 0){
+      if (level <= 1) return false;
+      var lowestLevel = levelKeys && levelKeys.length ? levelKeys[0] : null;
+      if (lowestLevel !== null && level <= lowestLevel) return false;
+      return true;
+    }
+    return level < MAX_LEVEL;
+  }
+
+  function isValidLevel(val){
+    return Number.isFinite(val) && val >= MIN_LEVEL && val <= MAX_LEVEL;
+  }
+
+  // Clamped +/- step from `current` (falling back to the default warm-up
+  // level when current isn't a valid level, e.g. the input is empty/NaN).
+  function stepLevel(current, delta){
+    var base = isValidLevel(current) ? current : DEFAULT_WARMUP_LEVEL;
+    return Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, base + delta));
   }
 
   // A level with no explicit table entry inherits from the nearest lower level that has one.
@@ -378,7 +395,9 @@
     clearLevelData: clearLevelData,
     getActiveRawData: getActiveRawData,
     getLevelKeys: getLevelKeys,
-    canDecreaseLevel: canDecreaseLevel,
+    canStepLevel: canStepLevel,
+    isValidLevel: isValidLevel,
+    stepLevel: stepLevel,
     getConfig: getConfig,
     resolveScores: resolveScores,
     createDefaultLevelData: createDefaultLevelData
@@ -400,22 +419,26 @@
     return sessionState.mode === null ? null : sessionState.levels[sessionState.mode];
   }
 
-  function currentTypeLetter(){
+  function currentChartTypeLetter(){
     if (sessionState.mode === "singles") return "S";
     if (sessionState.mode === "doubles") return "D";
     return sessionState.currentType;
   }
 
+  function currentChartTypeWord(){
+    return currentChartTypeLetter() === "D" ? "Double" : "Single";
+  }
+
   function currentLabel(){
     var level = currentLevel();
-    return level === null ? "--" : currentTypeLetter() + level;
+    return level === null ? "--" : currentChartTypeLetter() + level;
   }
 
   // The recommended AV is whichever of the level's avSingles/avDoubles matches
   // the type currently being played.
   function currentAv(config){
     if (!config) return undefined;
-    return currentTypeLetter() === "S" ? config.avSingles : config.avDoubles;
+    return currentChartTypeLetter() === "S" ? config.avSingles : config.avDoubles;
   }
 
   // The AV for an arbitrary "S15"/"D15"-style label, regardless of what's
@@ -542,7 +565,8 @@
 
   window.SessionModel = {
     currentLevel: currentLevel,
-    currentTypeLetter: currentTypeLetter,
+    currentChartTypeLetter: currentChartTypeLetter,
+    currentChartTypeWord: currentChartTypeWord,
     currentLabel: currentLabel,
     currentAv: currentAv,
     avForLabel: avForLabel,
