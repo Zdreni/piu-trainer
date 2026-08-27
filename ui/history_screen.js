@@ -2,8 +2,8 @@
   "use strict";
 
   var LevelModel = window.LevelModel;
-  var SessionTriesHistory = window.SessionTriesHistory;
-  var UiTools = window.UiTools;
+  var SessionTriesHistory = window.UI.SessionTriesHistory;
+  var UiTools = window.UI.Tools;
 
   var historyListEl = document.getElementById("historyList");
 
@@ -93,5 +93,5 @@
     stripEls.forEach(SessionTriesHistory.scrollStripToEnd);
   }
 
-  window.HistoryScreen = { onShow: render };
+  window.UI.HistoryScreen = { onShow: render };
 })(window);

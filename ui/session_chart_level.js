@@ -3,8 +3,8 @@
 
   var LevelModel = window.LevelModel;
   var SessionModel = window.SessionModel;
-  var UiTools = window.UiTools;
-  var SessionTriesHistory = window.SessionTriesHistory;
+  var UiTools = window.UI.Tools;
+  var SessionTriesHistory = window.UI.SessionTriesHistory;
 
   var sessionEl = document.getElementById("session");
   var modeSinglesBtn = document.getElementById("modeSinglesBtn");
@@ -186,7 +186,7 @@
     });
   }
 
-  window.SessionChartLevel = {
+  window.UI.SessionChartLevel = {
     init: init,
     render: render,
     renderAv: renderAv,

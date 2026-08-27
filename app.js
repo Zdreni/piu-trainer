@@ -1,10 +1,10 @@
 (function(){
   "use strict";
 
-  var DataModal = window.DataModal;
-  var TrainingSession = window.TrainingSession;
-  var StartScreen = window.StartScreen;
-  var HistoryScreen = window.HistoryScreen;
+  var DataModal = window.UI.DataModal;
+  var TrainingSession = window.UI.TrainingSession;
+  var StartScreen = window.UI.StartScreen;
+  var HistoryScreen = window.UI.HistoryScreen;
   var LevelModel = window.LevelModel;
 
   var restartBtn = document.getElementById("restartBtn");
@@ -12,7 +12,7 @@
   var historyBtn = document.getElementById("historyBtn");
 
   // Each screen's own onShow/onHide (when it defines them) is invoked as
-  // window.showScreen transitions into or out of it, so this module only
+  // window.UI.showScreen transitions into or out of it, so this module only
   // needs to know which element and screen object go with which name.
   var screens = {
     setup: { el: document.getElementById("setup"), screen: StartScreen },
@@ -41,7 +41,7 @@
 
     currentScreenName = name;
   }
-  window.showScreen = showScreen;
+  window.UI.showScreen = showScreen;
 
   historyBtn.addEventListener("click", function(){
     showScreen("history");

@@ -1,7 +1,7 @@
 (function(window){
   "use strict";
 
-  var UiTools = window.UiTools;
+  var UiTools = window.UI.Tools;
 
   var sessionScrollEl = document.getElementById("sessionScroll");
 
@@ -319,7 +319,7 @@
     el.scrollLeft = el.scrollWidth - el.clientWidth;
   }
 
-  window.SessionTriesHistory = {
+  window.UI.SessionTriesHistory = {
     showPending: showPending,
     resolveTry: resolveTry,
     reset: reset,

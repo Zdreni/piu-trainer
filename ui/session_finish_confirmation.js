@@ -7,7 +7,7 @@
   // immediately, with no modal, when the caller determines there's nothing
   // to lose).
   function init(hooks){
-    var TrainingSession = window.TrainingSession;
+    var TrainingSession = window.UI.TrainingSession;
 
     var restartBtn = document.getElementById("restartBtn");
     var finishModal = document.getElementById("finishModal");
@@ -44,5 +44,5 @@
     });
   }
 
-  window.SessionFinishConfirmation = { init: init };
+  window.UI.SessionFinishConfirmation = { init: init };
 })(window);

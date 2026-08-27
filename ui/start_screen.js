@@ -2,7 +2,7 @@
   "use strict";
 
   var LevelModel = window.LevelModel;
-  var TrainingSession = window.TrainingSession;
+  var TrainingSession = window.UI.TrainingSession;
 
   var startLevelInput = document.getElementById("startLevelInput");
   var startLevelDownBtn = document.getElementById("startLevelDownBtn");
@@ -66,7 +66,7 @@
   startLevelDownBtn.addEventListener("click", function(){ stepLevel(-1); });
   startLevelUpBtn.addEventListener("click", function(){ stepLevel(1); });
 
-  window.SessionFinishConfirmation.init({
+  window.UI.SessionFinishConfirmation.init({
     onConfirm: function(){
       startLevelInput.value = LevelModel.readStoredWarmupLevel();
       TrainingSession.resetToSetup();
@@ -78,7 +78,7 @@
   if (storedWarmupLevel !== null) startLevelInput.value = storedWarmupLevel;
   updateControls();
 
-  window.StartScreen = {
+  window.UI.StartScreen = {
     warmupLevelInput: startLevelInput,
     onShow: onShow
   };

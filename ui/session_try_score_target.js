@@ -3,7 +3,7 @@
 
   var LevelModel = window.LevelModel;
   var SessionModel = window.SessionModel;
-  var UiTools = window.UiTools;
+  var UiTools = window.UI.Tools;
 
   var targetNumberEl = document.getElementById("targetNumber");
   var targetBurstEl = document.getElementById("targetBurst");
@@ -70,7 +70,7 @@
     });
   }
 
-  window.SessionTryScoreTarget = {
+  window.UI.SessionTryScoreTarget = {
     init: init,
     render: render,
     getCurrentTarget: currentTarget,

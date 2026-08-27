@@ -3,9 +3,9 @@
 
   var LevelModel = window.LevelModel;
   var SessionModel = window.SessionModel;
-  var SessionTriesHistory = window.SessionTriesHistory;
-  var SessionChartLevel = window.SessionChartLevel;
-  var SessionTryScoreTarget = window.SessionTryScoreTarget;
+  var SessionTriesHistory = window.UI.SessionTriesHistory;
+  var SessionChartLevel = window.UI.SessionChartLevel;
+  var SessionTryScoreTarget = window.UI.SessionTryScoreTarget;
 
   // ---- DOM refs ----
   var flowGapEl = document.getElementById("flowGap");
@@ -48,7 +48,7 @@
   // (they measure/position elements inside it), so the resize listener is
   // only attached while it's the visible screen, rather than always-on with
   // an internal "am I even visible" guard. Exposed as TrainingSession's
-  // onShow/onHide, which window.showScreen invokes on screen transitions.
+  // onShow/onHide, which window.UI.showScreen invokes on screen transitions.
   function enableSessionResizeHandlers(){
     window.addEventListener("resize", SessionChartLevel.positionNavButtons);
     window.addEventListener("resize", SessionChartLevel.positionRecAv);
@@ -91,7 +91,7 @@
 
     SessionTriesHistory.showPending(SessionModel.currentLabel(), SessionTryScoreTarget.getCurrentTarget());
 
-    window.showScreen("session");
+    window.UI.showScreen("session");
 
     SessionChartLevel.render(forceAnim);
     SessionTryScoreTarget.render(forceAnim);
@@ -134,7 +134,7 @@
     SessionTryScoreTarget.reset();
     SessionTriesHistory.reset();
     LevelModel.finishSessionState();
-    window.showScreen("setup");
+    window.UI.showScreen("setup");
   }
 
   // Resumes a session saved before the last page reload: restores the tries
@@ -177,7 +177,7 @@
     onRerollRandom: rerollRandom
   });
 
-  window.TrainingSession = {
+  window.UI.TrainingSession = {
     start: startSession,
     resume: resume,
     render: render,

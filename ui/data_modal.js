@@ -190,5 +190,6 @@
     });
   }
 
-  window.DataModal = { init: init };
+  window.UI = window.UI || {};
+  window.UI.DataModal = { init: init };
 })(window);

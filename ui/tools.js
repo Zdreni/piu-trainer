@@ -274,7 +274,8 @@
     return svg;
   }
 
-  window.UiTools = {
+  window.UI = window.UI || {};
+  window.UI.Tools = {
     formatScore: formatScore,
     formatScoreHtml: formatScoreHtml,
     formatAv: formatAv,
