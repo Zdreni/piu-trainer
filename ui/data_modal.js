@@ -28,7 +28,7 @@
       var warmup = LevelModel.readStoredWarmupLevel();
       if (warmup !== null) settings.warmupLevel = warmup;
       var activeRawData = LevelModel.getActiveRawData();
-      if (activeRawData) settings.levels = activeRawData;
+      if (activeRawData) settings.levelData = activeRawData;
       return settings;
     }
 
@@ -139,7 +139,7 @@
       }
 
       if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)){
-        dataModalError.textContent = "Top-level JSON must be an object with \"warmupLevel\" and/or \"levels\".";
+        dataModalError.textContent = "Top-level JSON must be an object with \"warmupLevel\" and/or \"levelData\".";
         dataModalError.hidden = false;
         return;
       }
@@ -149,10 +149,10 @@
         return;
       }
 
-      if (parsed.levels !== undefined){
-        var levelsCheck = LevelModel.validateLevelData(parsed.levels);
+      if (parsed.levelData !== undefined){
+        var levelsCheck = LevelModel.validateLevelData(parsed.levelData);
         if (!levelsCheck.valid){
-          dataModalError.textContent = "levels: " + levelsCheck.error;
+          dataModalError.textContent = "levelData: " + levelsCheck.error;
           dataModalError.hidden = false;
           return;
         }
@@ -164,8 +164,8 @@
         return;
       }
 
-      if (parsed.levels !== undefined){
-        LevelModel.saveLevelData(parsed.levels);
+      if (parsed.levelData !== undefined){
+        LevelModel.saveLevelData(parsed.levelData);
       } else {
         LevelModel.clearLevelData();
       }

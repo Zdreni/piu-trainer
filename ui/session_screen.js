@@ -63,7 +63,6 @@
   // offsetTop) because .number-wrap is itself position:relative, which would otherwise
   // skew levelNumberEl's offset to be relative to that narrow wrapper instead of .play.
   function positionLevelNavButtons(){
-    if (playEl.hidden) return;
     var playRect = playEl.getBoundingClientRect();
     var numRect = levelNumberEl.getBoundingClientRect();
     var centerY = numRect.top - playRect.top + numRect.height / 2;
@@ -75,7 +74,6 @@
   // Matches the recommended-AV badge's width to the level number above it
   // (so it tracks the number's digit count).
   function positionRecAv(){
-    if (playEl.hidden) return;
     recAvBoxEl.style.width = levelNumberEl.parentElement.getBoundingClientRect().width + "px";
   }
 
@@ -86,7 +84,6 @@
   // this stays correct if the CSS is ever tuned.
   function layoutFlowChevrons(){
     if (!flowGapEl) return;
-    if (playEl.hidden) return;
 
     // Needs at least one chevron in the DOM to measure its rendered size against.
     if (!flowGapEl.firstElementChild) flowGapEl.appendChild(makeFlowChevron());
@@ -104,6 +101,22 @@
     var current = flowGapEl.children.length;
     for (var i = current; i < count; i++) flowGapEl.appendChild(makeFlowChevron());
     for (var j = current; j > count; j--) flowGapEl.removeChild(flowGapEl.lastElementChild);
+  }
+
+  // These three only make sense while the play screen is actually showing
+  // (they measure/position elements inside it), so the resize listener is
+  // only attached while playing, rather than always-on with an internal
+  // "am I even visible" guard.
+  function enablePlayResizeHandlers(){
+    window.addEventListener("resize", positionLevelNavButtons);
+    window.addEventListener("resize", positionRecAv);
+    window.addEventListener("resize", layoutFlowChevrons);
+  }
+
+  function disablePlayResizeHandlers(){
+    window.removeEventListener("resize", positionLevelNavButtons);
+    window.removeEventListener("resize", positionRecAv);
+    window.removeEventListener("resize", layoutFlowChevrons);
   }
 
   function updateLevelNavButtons(){
@@ -150,6 +163,7 @@
       noDataLevelEl.textContent = newLevelText;
       jumpInput.value = level;
       window.showScreen("noData");
+      disablePlayResizeHandlers();
       lastLevelText = newLevelText;
       lastLevelValue = level;
       lastTargetText = null;
@@ -205,6 +219,7 @@
       targetNumberEl.innerHTML = UiTools.formatScoreHtml(target);
     }
     window.showScreen("play");
+    enablePlayResizeHandlers();
 
     var animateLevel = levelChanged || forceAnim;
     if (animateLevel){
@@ -273,8 +288,9 @@
     lastAvText = null;
     lastAvValue = null;
     SessionTriesHistory.reset();
-    LevelModel.clearSessionState();
+    LevelModel.finishSessionState();
     window.showScreen("setup");
+    disablePlayResizeHandlers();
   }
 
   // Resumes a session saved before the last page reload: restores the tries
@@ -329,10 +345,6 @@
       rerollRandom();
     }
   });
-
-  window.addEventListener("resize", positionLevelNavButtons);
-  window.addEventListener("resize", positionRecAv);
-  window.addEventListener("resize", layoutFlowChevrons);
 
   jumpBtn.addEventListener("click", function(){
     var val = parseInt(jumpInput.value, 10);

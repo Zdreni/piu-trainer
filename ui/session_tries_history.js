@@ -53,9 +53,9 @@
     return groupEl.querySelector(".tries-sequence-cells");
   }
 
-  // Reuses the strip's last box if its level number matches; opens a new one otherwise.
-  function ensureGroup(numLevel){
-    var lastGroupEl = sessionScrollEl.lastElementChild;
+  // Reuses containerEl's last box if its level number matches; opens a new one otherwise.
+  function ensureGroup(containerEl, numLevel){
+    var lastGroupEl = containerEl.lastElementChild;
     if (lastGroupEl && groupHead(lastGroupEl) === numLevel) return lastGroupEl;
 
     var groupEl = document.createElement("div");
@@ -71,7 +71,7 @@
 
     groupEl.appendChild(headEl);
     groupEl.appendChild(cellsEl);
-    sessionScrollEl.appendChild(groupEl);
+    containerEl.appendChild(groupEl);
 
     return groupEl;
   }
@@ -100,7 +100,7 @@
     var isNewGroup = false;
 
     if (!pendingCellEl){
-      pendingGroupEl = ensureGroup(parts.num);
+      pendingGroupEl = ensureGroup(sessionScrollEl, parts.num);
       isNewGroup = !groupCells(pendingGroupEl).children.length;
 
       pendingCellEl = document.createElement("div");
@@ -135,7 +135,7 @@
         if (!oldCellsEl.children.length && oldGroupEl.parentNode){
           oldGroupEl.parentNode.removeChild(oldGroupEl);
         }
-        pendingGroupEl = ensureGroup(parts.num);
+        pendingGroupEl = ensureGroup(sessionScrollEl, parts.num);
         isNewGroup = !groupCells(pendingGroupEl).children.length;
         groupCells(pendingGroupEl).appendChild(pendingCellEl);
         placeArrow();
@@ -273,6 +273,52 @@
   }
   enableDragScroll(sessionScrollEl);
 
+  // A single already-resolved cell (pass/fail, no pending state) — used to
+  // build read-only strips for past sessions on the history screen.
+  function buildResolvedCell(level, target, success){
+    var parts = levelParts(level);
+    var cellEl = document.createElement("div");
+    cellEl.className = "try-cell " + (success ? "pass" : "fail");
+
+    var scoreEl = document.createElement("div");
+    scoreEl.className = "try-cell-score";
+    scoreEl.innerHTML = UiTools.formatScoreHtml(target);
+
+    var statusEl = document.createElement("div");
+    statusEl.className = "try-cell-status";
+    statusEl.textContent = success ? "Pass" : "Fail";
+
+    cellEl.appendChild(UiTools.buildLevelBall(parts.typeWord, parts.num, parts.isDoubles, "level-ball--tiny"));
+    cellEl.appendChild(scoreEl);
+    cellEl.appendChild(statusEl);
+    return cellEl;
+  }
+
+  // Builds a standalone, non-interactive .session-scroll strip (drag-to-scroll
+  // only, no pending cell) from a past session's resolved tries — for the
+  // history screen, which shows one of these per archived session. Carries
+  // its own "history-strip" class so the dimming rule that normally fades
+  // every non-current ball (there's no "current" try in a past session)
+  // doesn't apply here.
+  function buildStaticStrip(tries){
+    var containerEl = document.createElement("div");
+    containerEl.className = "session-scroll history-strip";
+    tries.forEach(function(t){
+      var groupEl = ensureGroup(containerEl, levelParts(t.level).num);
+      groupCells(groupEl).appendChild(buildResolvedCell(t.level, t.target, t.success));
+    });
+    enableDragScroll(containerEl);
+    return containerEl;
+  }
+
+  // Scrolls an arbitrary strip element to its true last pixel — same
+  // rationale as scrollToEnd(), but usable on any strip (e.g. a history
+  // strip), not just the live sessionScrollEl. Only meaningful once the
+  // element is attached to the visible DOM, since it reads layout sizes.
+  function scrollStripToEnd(el){
+    el.scrollLeft = el.scrollWidth - el.clientWidth;
+  }
+
   window.SessionTriesHistory = {
     showPending: showPending,
     resolveTry: resolveTry,
@@ -280,6 +326,8 @@
     getTries: getTries,
     getLastTry: getLastTry,
     restore: restore,
-    scrollToEnd: scrollToEnd
+    scrollToEnd: scrollToEnd,
+    buildStaticStrip: buildStaticStrip,
+    scrollStripToEnd: scrollStripToEnd
   };
 })(window);

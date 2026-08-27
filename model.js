@@ -1,9 +1,13 @@
 (function(window){
   "use strict";
 
-  var STORAGE_KEY = "piuTrainerLevelData";
-  var WARMUP_LEVEL_KEY = "piuTrainerWarmupLevel";
-  var SESSION_KEY = "piuTrainerSessionState";
+  var STORAGE_KEY = "piuTrainerData";
+
+  // Legacy pre-migration keys, each holding one piece of what now lives
+  // together under STORAGE_KEY. Only read once, to migrate existing users.
+  var LEGACY_LEVEL_DATA_KEY = "piuTrainerLevelData";
+  var LEGACY_WARMUP_LEVEL_KEY = "piuTrainerWarmupLevel";
+  var LEGACY_SESSION_KEY = "piuTrainerSessionState";
 
   var MIN_LEVEL = 1;
   var MAX_LEVEL = 28;
@@ -69,42 +73,99 @@
     return { valid: true };
   }
 
-  function readStoredRawData(){
+  // All app data lives under one localStorage key, shaped as:
+  //   { settings: { levelData, warmupLevel }, currentSession, previousSessions }
+  // Read-modify-write helpers below load/save the whole blob so each piece
+  // of state can still be read, saved, and cleared independently.
+
+  function migrateLegacyData(){
+    var migrated = { settings: {}, previousSessions: [] };
+    var found = false;
     try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      var parsed = JSON.parse(raw);
-      return validateLevelData(parsed).valid ? parsed : null;
+      var rawLevelData = localStorage.getItem(LEGACY_LEVEL_DATA_KEY);
+      if (rawLevelData){
+        var parsedLevelData = JSON.parse(rawLevelData);
+        if (validateLevelData(parsedLevelData).valid){
+          migrated.settings.levelData = parsedLevelData;
+          found = true;
+        }
+      }
+      var rawWarmup = localStorage.getItem(LEGACY_WARMUP_LEVEL_KEY);
+      var warmupVal = parseInt(rawWarmup, 10);
+      if (Number.isFinite(warmupVal) && warmupVal >= MIN_LEVEL){
+        migrated.settings.warmupLevel = warmupVal;
+        found = true;
+      }
+      var rawSession = localStorage.getItem(LEGACY_SESSION_KEY);
+      if (rawSession){
+        migrated.currentSession = JSON.parse(rawSession);
+        found = true;
+      }
     } catch (e){
       return null;
     }
+    if (!found) return null;
+    try {
+      localStorage.removeItem(LEGACY_LEVEL_DATA_KEY);
+      localStorage.removeItem(LEGACY_WARMUP_LEVEL_KEY);
+      localStorage.removeItem(LEGACY_SESSION_KEY);
+    } catch (e){}
+    return migrated;
+  }
+
+  function readStoredBlob(){
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      var parsed = raw ? JSON.parse(raw) : null;
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)){
+        parsed = migrateLegacyData() || { settings: {}, previousSessions: [] };
+        writeStoredBlob(parsed);
+      }
+      if (!parsed.settings || typeof parsed.settings !== "object") parsed.settings = {};
+      if (!Array.isArray(parsed.previousSessions)) parsed.previousSessions = [];
+      return parsed;
+    } catch (e){
+      return { settings: {}, previousSessions: [] };
+    }
+  }
+
+  function writeStoredBlob(blob){
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(blob)); } catch (e){}
+  }
+
+  function readStoredRawData(){
+    var levelData = readStoredBlob().settings.levelData;
+    return levelData && validateLevelData(levelData).valid ? levelData : null;
   }
 
   function readStoredWarmupLevel(){
-    try {
-      var raw = localStorage.getItem(WARMUP_LEVEL_KEY);
-      var val = parseInt(raw, 10);
-      return Number.isFinite(val) && val >= MIN_LEVEL ? val : null;
-    } catch (e){
-      return null;
-    }
+    var val = readStoredBlob().settings.warmupLevel;
+    return typeof val === "number" && Number.isFinite(val) && val >= MIN_LEVEL ? val : null;
   }
 
   function saveWarmupLevel(level){
-    try { localStorage.setItem(WARMUP_LEVEL_KEY, String(level)); } catch (e){}
+    var blob = readStoredBlob();
+    blob.settings.warmupLevel = level;
+    writeStoredBlob(blob);
   }
 
   function clearWarmupLevel(){
-    try { localStorage.removeItem(WARMUP_LEVEL_KEY); } catch (e){}
+    var blob = readStoredBlob();
+    delete blob.settings.warmupLevel;
+    writeStoredBlob(blob);
+  }
+
+  function validTriesArray(tries){
+    return Array.isArray(tries) && tries.every(function(t){
+      return t && typeof t.level === "string" && typeof t.target === "number" && typeof t.success === "boolean";
+    });
   }
 
   // The in-progress training session (current level, attempt, and resolved tries)
   // so a page reload can resume exactly where the user left off.
   function readSessionState(){
+    var parsed = readStoredBlob().currentSession;
     try {
-      var raw = localStorage.getItem(SESSION_KEY);
-      if (!raw) return null;
-      var parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== "object") return null;
       if (parsed.mode !== "singles" && parsed.mode !== "doubles" && parsed.mode !== "random") return null;
       if (parsed.currentType !== "S" && parsed.currentType !== "D") return null;
@@ -116,23 +177,93 @@
       });
       if (!levelsOk) return null;
       if (typeof parsed.attemptIndex !== "number" || !Number.isFinite(parsed.attemptIndex) || parsed.attemptIndex < 0) return null;
-      if (!Array.isArray(parsed.tries)) return null;
-      var triesOk = parsed.tries.every(function(t){
-        return t && typeof t.level === "string" && typeof t.target === "number" && typeof t.success === "boolean";
-      });
-      if (!triesOk) return null;
+      if (!validTriesArray(parsed.tries)) return null;
+      if ("startedAt" in parsed && parsed.startedAt !== null && typeof parsed.startedAt !== "string") return null;
       return parsed;
     } catch (e){
       return null;
     }
   }
 
+  // Archived sessions (finished, with at least one recorded try), most
+  // recently started first. Entries that don't even have a usable tries
+  // array are dropped rather than shown broken.
+  function readPreviousSessions(){
+    try {
+      var sessions = readStoredBlob().previousSessions.filter(function(session){
+        return session && typeof session === "object" && validTriesArray(session.tries) && session.tries.length > 0;
+      });
+      sessions.sort(function(a, b){
+        return (Date.parse(b.startedAt) || 0) - (Date.parse(a.startedAt) || 0);
+      });
+      return sessions;
+    } catch (e){
+      return [];
+    }
+  }
+
+  // No explicit locale here on purpose: navigator.language is only the
+  // browser's UI language, which can differ from the OS's regional format
+  // settings (e.g. English UI with non-US date/time conventions). Passing
+  // undefined lets the engine fall back to its default locale, which tracks
+  // those OS-level regional settings instead. hour12 is forced off regardless
+  // of locale, since en-US's AM/PM clock is undesired even when everything
+  // else about the US locale (if that's what resolves) is kept.
+  function formatSessionDate(iso){
+    var ms = iso ? Date.parse(iso) : NaN;
+    if (!Number.isFinite(ms)) return "Unknown date";
+    return new Date(ms).toLocaleString(undefined, {
+      month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: false
+    });
+  }
+
   function saveSessionState(state){
-    try { localStorage.setItem(SESSION_KEY, JSON.stringify(state)); } catch (e){}
+    var blob = readStoredBlob();
+    blob.currentSession = state;
+    writeStoredBlob(blob);
   }
 
   function clearSessionState(){
-    try { localStorage.removeItem(SESSION_KEY); } catch (e){}
+    var blob = readStoredBlob();
+    delete blob.currentSession;
+    writeStoredBlob(blob);
+  }
+
+  var PREVIOUS_SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+  // Drops archived sessions older than 30 days. A session whose startedAt
+  // can't be parsed is kept rather than guessed at and discarded.
+  function pruneOldSessions(previousSessions){
+    var cutoff = Date.now() - PREVIOUS_SESSION_MAX_AGE_MS;
+    return previousSessions.filter(function(session){
+      var startedAt = session && Date.parse(session.startedAt);
+      return !Number.isFinite(startedAt) || startedAt >= cutoff;
+    });
+  }
+
+  // Ends the current session: archives it into previousSessions (unless it
+  // never had any tries recorded, e.g. abandoned right at the setup screen)
+  // instead of just discarding it, then clears currentSession. Also prunes
+  // any archived sessions that are now more than 30 days old.
+  function finishSessionState(){
+    var blob = readStoredBlob();
+    var session = blob.currentSession;
+    if (session && Array.isArray(session.tries) && session.tries.length > 0){
+      blob.previousSessions.push(session);
+    }
+    blob.previousSessions = pruneOldSessions(blob.previousSessions);
+    delete blob.currentSession;
+    writeStoredBlob(blob);
+  }
+
+  // Removes one archived session, identified by its startedAt timestamp
+  // (unique in practice — two sessions can't start in the same millisecond).
+  function deleteSession(startedAt){
+    var blob = readStoredBlob();
+    blob.previousSessions = blob.previousSessions.filter(function(session){
+      return !session || session.startedAt !== startedAt;
+    });
+    writeStoredBlob(blob);
   }
 
   var activeRawData = null;
@@ -153,13 +284,17 @@
 
   // Persists level data to storage and makes it the active data set.
   function saveLevelData(raw){
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(raw)); } catch (e){}
+    var blob = readStoredBlob();
+    blob.settings.levelData = raw;
+    writeStoredBlob(blob);
     setActiveData(raw);
   }
 
   // Clears level data from storage and from the active data set.
   function clearLevelData(){
-    try { localStorage.removeItem(STORAGE_KEY); } catch (e){}
+    var blob = readStoredBlob();
+    delete blob.settings.levelData;
+    writeStoredBlob(blob);
     clearActiveData();
   }
 
@@ -235,6 +370,10 @@
     readSessionState: readSessionState,
     saveSessionState: saveSessionState,
     clearSessionState: clearSessionState,
+    finishSessionState: finishSessionState,
+    readPreviousSessions: readPreviousSessions,
+    deleteSession: deleteSession,
+    formatSessionDate: formatSessionDate,
     saveLevelData: saveLevelData,
     clearLevelData: clearLevelData,
     getActiveRawData: getActiveRawData,
@@ -253,7 +392,8 @@
     mode: null,
     currentType: null,
     levels: { singles: null, doubles: null, random: null },
-    attemptIndex: 0
+    attemptIndex: 0,
+    startedAt: null
   };
 
   function currentLevel(){
@@ -344,6 +484,7 @@
     sessionState.mode = "random";
     sessionState.currentType = Math.random() < 0.5 ? "S" : "D";
     sessionState.attemptIndex = 0;
+    sessionState.startedAt = new Date().toISOString();
   }
 
   // Clears all session state back to the setup screen's starting point.
@@ -352,6 +493,7 @@
     sessionState.currentType = null;
     sessionState.levels = { singles: null, doubles: null, random: null };
     sessionState.attemptIndex = 0;
+    sessionState.startedAt = null;
   }
 
   // Restores session state saved before the last page reload.
@@ -360,6 +502,7 @@
     sessionState.currentType = savedState.currentType;
     sessionState.levels = savedState.levels;
     sessionState.attemptIndex = savedState.attemptIndex;
+    sessionState.startedAt = savedState.startedAt;
   }
 
   // Records a pass on the current level: in random mode, bumps the other
@@ -392,7 +535,8 @@
       mode: sessionState.mode,
       currentType: sessionState.currentType,
       levels: sessionState.levels,
-      attemptIndex: sessionState.attemptIndex
+      attemptIndex: sessionState.attemptIndex,
+      startedAt: sessionState.startedAt
     };
   }
 

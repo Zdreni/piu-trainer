@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="level-controller.css?v=138">
+<link rel="stylesheet" href="level-controller.css?v=143">
 </head>
 <body>
 
@@ -37,12 +37,18 @@
           </div>
         </div>
         <button id="startBtn">Go</button>
+        <button type="button" class="history-btn" id="historyBtn">History</button>
         <p class="error" id="setupError" hidden>Enter a valid level number.</p>
       </div>
       <div class="io-row">
         <button type="button" class="io-btn" id="importBtn">Import JSON</button>
         <button type="button" class="io-btn" id="viewDataBtn">View / Edit Data</button>
       </div>
+    </section>
+
+    <!-- HISTORY SCREEN -->
+    <section class="history" id="history" hidden>
+      <div class="history-list" id="historyList"></div>
     </section>
 
     <!-- PLAY SCREEN -->
@@ -132,16 +138,28 @@
       </div>
     </div>
 
+    <!-- DELETE SESSION CONFIRM MODAL -->
+    <div class="modal-overlay" id="deleteSessionModal" hidden>
+      <div class="modal">
+        <h2 id="deleteSessionModalTitle">Delete this session?</h2>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn primary" id="cancelDeleteSessionBtn">Cancel</button>
+          <button type="button" class="modal-btn danger" id="confirmDeleteSessionBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <script src="model.js?v=9"></script>
+  <script src="model.js?v=12"></script>
   <script src="ui/tools.js?v=7"></script>
-  <script src="ui/session_tries_history.js?v=13"></script>
-  <script src="ui/session_screen.js?v=31"></script>
+  <script src="ui/session_tries_history.js?v=15"></script>
+  <script src="ui/session_screen.js?v=33"></script>
   <script src="ui/session_finish_confirmation.js?v=1"></script>
   <script src="ui/start_screen.js?v=11"></script>
-  <script src="ui/data_modal.js?v=3"></script>
-  <script src="app.js?v=33"></script>
+  <script src="ui/data_modal.js?v=4"></script>
+  <script src="ui/history_screen.js?v=9"></script>
+  <script src="app.js?v=35"></script>
 
 </body>
 </html>
