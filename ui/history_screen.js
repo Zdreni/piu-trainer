@@ -4,6 +4,7 @@
   var LevelModel = window.LevelModel;
   var SessionTriesHistory = window.UI.SessionTriesHistory;
   var UiTools = window.UI.Tools;
+  var Svg = window.UI.Svg;
 
   var historyListEl = document.getElementById("historyList");
 
@@ -72,7 +73,7 @@
       deleteBtn.className = "history-delete-btn";
       deleteBtn.title = "Delete session";
       deleteBtn.setAttribute("aria-label", "Delete session");
-      deleteBtn.appendChild(UiTools.buildDeleteIcon());
+      deleteBtn.innerHTML = Svg.deleteIcon;
       deleteBtn.addEventListener("click", function(){
         requestDelete(session.startedAt, dateText);
       });

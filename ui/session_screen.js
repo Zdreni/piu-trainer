@@ -3,6 +3,7 @@
 
   var LevelModel = window.LevelModel;
   var SessionModel = window.SessionModel;
+  var Svg = window.UI.Svg;
   var SessionTriesHistory = window.UI.SessionTriesHistory;
   var SessionChartLevel = window.UI.SessionChartLevel;
   var SessionTryScoreTarget = window.UI.SessionTryScoreTarget;
@@ -13,7 +14,7 @@
   function makeFlowChevron(){
     var el = document.createElement("div");
     el.className = "flow-chevron";
-    el.setAttribute("aria-hidden", "true");
+    el.innerHTML = Svg.flowChevron;
     return el;
   }
 

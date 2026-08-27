@@ -274,13 +274,15 @@ body{
   justify-content:flex-start;
   gap:0;
 }
-/* A bold V-shaped caret pointing down, built from two rotated bars (same
-   dark tone as the AV badge's background). */
+/* Holds the inline SVG caret (a bold V pointing down, same dark tone as the
+   AV badge's background). */
 .flow-chevron{
-  position:relative;
   flex-shrink:0;
   width:5.2rem;
   height:2.8rem;
+}
+.flow-chevron svg{
+  display:block;
 }
 /* Breathing room above the first chevron (from the AV badge) and below the
    last one (to the target score), the latter matching the gap used between
@@ -290,25 +292,6 @@ body{
 }
 .flow-chevron:last-child{
   margin-bottom:0;
-}
-.flow-chevron::before,
-.flow-chevron::after{
-  content:"";
-  position:absolute;
-  top:1rem;
-  width:58%;
-  height:0.8rem;
-  border-radius:999px;
-  background:#000;
-  border:1px solid var(--line);
-}
-.flow-chevron::before{
-  left:2%;
-  transform:rotate(45deg);
-}
-.flow-chevron::after{
-  right:2%;
-  transform:rotate(-45deg);
 }
 
 .level-block{

@@ -257,23 +257,6 @@
     return ball;
   }
 
-  function buildDeleteIcon(){
-    var svgNS = "http://www.w3.org/2000/svg";
-    var svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("width", "1em");
-    svg.setAttribute("height", "1em");
-    svg.setAttribute("fill", "none");
-    svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "2.6");
-    svg.setAttribute("stroke-linecap", "round");
-    svg.setAttribute("aria-hidden", "true");
-    var path = document.createElementNS(svgNS, "path");
-    path.setAttribute("d", "M6 6 L18 18 M18 6 L6 18");
-    svg.appendChild(path);
-    return svg;
-  }
-
   window.UI = window.UI || {};
   window.UI.Tools = {
     formatScore: formatScore,
@@ -285,7 +268,6 @@
     wheelNode: wheelNode,
     settleWheel: settleWheel,
     buildLevelBall: buildLevelBall,
-    animateCount: animateCount,
-    buildDeleteIcon: buildDeleteIcon
+    animateCount: animateCount
   };
 })(window);
