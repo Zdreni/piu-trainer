@@ -101,7 +101,7 @@ body{
 .eyebrow{
   font-size:0.72rem;
   font-weight:700;
-  letter-spacing:0.28em;
+  letter-spacing:0.06em;
   color:var(--text-low);
   text-transform:uppercase;
   display:flex;
@@ -318,7 +318,7 @@ body{
   gap:0.4rem;
 }
 .level-block .number-wrap{
-  margin-top:0.7rem;
+  margin-top:1.3rem;
 }
 
 .mode-row{
@@ -509,7 +509,7 @@ body{
 }
 .try-cell.pending .try-cell-score,
 .try-cell.pending .try-cell-status{
-  color:var(--yellow-light);
+  color:color-mix(in srgb, var(--yellow-light) 70%, var(--yellow));
 }
 .try-cell.pending .try-cell-score{
   font-size:1.25rem;
@@ -525,7 +525,7 @@ body{
   align-self:center;
   width:0.6rem;
   height:3.4rem;
-  background:var(--yellow-light);
+  background:color-mix(in srgb, var(--yellow-light) 70%, transparent);
   clip-path:polygon(0% 8%, 45% 8%, 100% 50%, 45% 92%, 0% 92%);
 }
 /* Leading the strip or sitting between groups, the arrow inherits
@@ -649,8 +649,10 @@ body{
   line-height:1;
 }
 .btn:active{transform:scale(0.95);}
-.btn-fail .btn-symbol, .btn-fail .btn-footer{color:var(--red);}
-.btn-pass .btn-symbol, .btn-pass .btn-footer{color:var(--green);}
+.btn-fail{background:color-mix(in srgb, var(--red) 3%, var(--bg-panel));}
+.btn-fail .btn-symbol, .btn-fail .btn-footer{color:color-mix(in srgb, var(--red) 85%, black);}
+.btn-pass{background:color-mix(in srgb, var(--green) 3%, var(--bg-panel));}
+.btn-pass .btn-symbol, .btn-pass .btn-footer{color:color-mix(in srgb, var(--green) 70%, black);}
 
 /* ---------- setup screen ---------- */
 .setup{
