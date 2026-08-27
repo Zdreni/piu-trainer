@@ -9,7 +9,6 @@
   var startLevelUpBtn = document.getElementById("startLevelUpBtn");
   var startBtn = document.getElementById("startBtn");
   var setupError = document.getElementById("setupError");
-  var restartBtn = document.getElementById("restartBtn");
 
   var MIN_LEVEL = LevelModel.MIN_LEVEL;
   var MAX_LEVEL = LevelModel.MAX_LEVEL;
@@ -68,12 +67,12 @@
   startLevelDownBtn.addEventListener("click", function(){ stepLevel(-1); });
   startLevelUpBtn.addEventListener("click", function(){ stepLevel(1); });
 
-  function backToSetup(){
-    if (TrainingSession.hasTries() && !window.confirm("Finish this practice session?")) return;
-    startLevelInput.value = LevelModel.readStoredWarmupLevel();
-    TrainingSession.resetToSetup();
-  }
-  restartBtn.addEventListener("click", backToSetup);
+  window.SessionFinishConfirmation.init({
+    onConfirm: function(){
+      startLevelInput.value = LevelModel.readStoredWarmupLevel();
+      TrainingSession.resetToSetup();
+    }
+  });
 
   // ---- warm-up level prefill ----
   var storedWarmupLevel = LevelModel.readStoredWarmupLevel();

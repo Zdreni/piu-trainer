@@ -819,6 +819,10 @@ body{
   text-transform:uppercase;
   color:var(--text-hi);
 }
+#finishModal h2{
+  text-align:center;
+  padding:1.2rem 0;
+}
 .data-textarea{
   flex:1;
   min-height:280px;
@@ -865,6 +869,11 @@ body{
 .modal-btn.primary{
   background:linear-gradient(180deg, #6be3ff, var(--cyan));
   color:var(--bg-void);
+}
+.modal-btn.danger{
+  background:color-mix(in srgb, var(--red) 6%, var(--bg-panel-2));
+  color:color-mix(in srgb, var(--red) 40%, var(--text-mid));
+  border:1px solid color-mix(in srgb, var(--red) 15%, var(--line));
 }
 
 /* ---------- no-data banner ---------- */
