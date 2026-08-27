@@ -23,6 +23,8 @@
   var currentScreenName = null;
 
   function showScreen(name){
+    if (name === currentScreenName) return;
+
     var current = currentScreenName && screens[currentScreenName];
     if (current && current.screen && current.screen.onHide) current.screen.onHide();
 
@@ -50,7 +52,7 @@
     warmupLevelInput: StartScreen.warmupLevelInput,
     getCurrentLevel: TrainingSession.getCurrentLevel,
     render: TrainingSession.render,
-    resetToSetup: TrainingSession.resetToSetup
+    refreshSetup: StartScreen.onShow
   });
 
   function isFullscreen(){

@@ -6,7 +6,9 @@
   //   warmupLevelInput  - the setup screen's level input, kept in sync with the saved warmup level
   //   getCurrentLevel() - returns the level currently in play, or null
   //   render()          - re-renders the play screen for the current level
-  //   resetToSetup()    - resets app state and shows the setup screen
+  //   refreshSetup()    - refreshes the setup screen's controls (this modal only ever
+  //                       saves while setup is already showing, so this is a same-screen
+  //                       refresh, not a screen transition)
   function init(hooks){
     var LevelModel = window.LevelModel;
 
@@ -61,7 +63,7 @@
       LevelModel.clearSessionState();
       hooks.warmupLevelInput.value = "";
       closeDataModal();
-      hooks.resetToSetup();
+      hooks.refreshSetup();
     }
 
     importBtn.addEventListener("click", function(){ openDataModal("import"); });
@@ -119,7 +121,7 @@
         LevelModel.saveLevelData(importedLevels);
         closeDataModal();
         if (hooks.getCurrentLevel() !== null) hooks.render();
-        else window.showScreen("setup");
+        else hooks.refreshSetup();
         return;
       }
 
@@ -183,7 +185,7 @@
       if (hooks.getCurrentLevel() !== null && LevelModel.getConfig(hooks.getCurrentLevel())){
         hooks.render();
       } else {
-        hooks.resetToSetup();
+        hooks.refreshSetup();
       }
     });
   }
