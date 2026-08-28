@@ -3,7 +3,6 @@
 
   var LevelModel = window.LevelModel;
   var SessionTriesHistory = window.UI.SessionTriesHistory;
-  var UiTools = window.UI.Tools;
   var Svg = window.UI.Svg;
 
   var historyListEl = document.getElementById("historyList");

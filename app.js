@@ -1,7 +1,7 @@
 (function(){
   "use strict";
 
-  var DataModal = window.UI.DataModal;
+  var DataEditDialog = window.UI.DataEditDialog;
   var TrainingSession = window.UI.TrainingSession;
   var StartScreen = window.UI.StartScreen;
   var HistoryScreen = window.UI.HistoryScreen;
@@ -47,8 +47,8 @@
     showScreen("history");
   });
 
-  // ---- data import / view-edit modal ----
-  DataModal.init({
+  // ---- data import / view-edit dialog ----
+  DataEditDialog.init({
     warmupLevelInput: StartScreen.warmupLevelInput,
     getCurrentLevel: TrainingSession.getCurrentLevel,
     render: TrainingSession.render,

@@ -191,5 +191,5 @@
   }
 
   window.UI = window.UI || {};
-  window.UI.DataModal = { init: init };
+  window.UI.DataEditDialog = { init: init };
 })(window);
