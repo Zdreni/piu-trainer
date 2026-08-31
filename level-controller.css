@@ -8,9 +8,9 @@
   --pink-dim:rgba(255,107,69,0.35);
   --cyan:#22d3ee;
   --cyan-dim:rgba(34,211,238,0.35);
-  --yellow:#ff8a3d;
-  --yellow-dim:rgba(255,138,61,0.35);
-  --yellow-light:#ffd27a;
+  --yellow:#c9a860;
+  --yellow-dim:rgba(201,168,96,0.35);
+  --yellow-light:#edd9a0;
   --amber:#ffb648;
   --green:#5ce694;
   --green-dim:rgba(92,230,148,0.35);
@@ -251,7 +251,7 @@ body{
   /* This element's own drop-shadow glow bleeds onto the suffix from the
      adjacent digit, so opacity alone barely reads — use a genuinely
      darker, flat color here instead of counting on alpha blending. */
-  color:#7a4020;
+  color:#5c4a2a;
   opacity:1;
   font-size:0.467em;
 }
@@ -635,7 +635,7 @@ body{
 }
 .btn:active{transform:scale(0.95);}
 .btn-fail{background:color-mix(in srgb, var(--red) 3%, var(--bg-panel));}
-.btn-fail .btn-symbol, .btn-fail .btn-footer{color:color-mix(in srgb, var(--red) 90%, black);}
+.btn-fail .btn-symbol, .btn-fail .btn-footer{color:color-mix(in srgb, var(--red) 80%, white);}
 .btn-pass{background:color-mix(in srgb, var(--green) 3%, var(--bg-panel));}
 .btn-pass .btn-symbol, .btn-pass .btn-footer{color:color-mix(in srgb, var(--green) 85%, black);}
 
