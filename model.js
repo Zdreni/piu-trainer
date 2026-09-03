@@ -13,24 +13,38 @@
   var MAX_LEVEL = 28;
   var DEFAULT_WARMUP_LEVEL = 10;
 
-  // Merges each explicitly-listed level's config forward onto the next
-  // (so a level entry only needs to specify what changed since the one below it).
-  function fillGaps(raw){
-    var result = {};
-    var prev = null;
-    Object.keys(raw).sort(function(a, b){ return Number(a) - Number(b); }).forEach(function(key){
-      var merged = Object.assign({}, prev, raw[key]);
-      result[key] = merged;
-      prev = merged;
-    });
-    return result;
+  var PROFILE_CURRENT_VERSION = 1;
+
+  // Level data's root may carry a numeric "version" alongside the level entries,
+  // for future migrations of the level data format. Absent means version 0.
+  function getProfileVersion(raw){
+    return raw && typeof raw.version === "number" && Number.isFinite(raw.version) ? raw.version : 0;
   }
 
-  function validateLevelData(data){
+  // v0 keyed each level directly to its config: { "10": { scores, avSingles, avDoubles }, ... }.
+  // v1 instead keys each field to a level->value dict: { scores: { "10": [...] }, avSingles: { "10": ... }, ... },
+  // so a level that only overrides one field doesn't need to repeat the others.
+  function convertProfileV0ToV1(raw){
+    var converted = { version: 1, scores: {}, avSingles: {}, avDoubles: {} };
+    Object.keys(raw).forEach(function(level){
+      if (level === "version") return;
+      var entry = raw[level];
+      if (!entry || typeof entry !== "object") return;
+      if ("scores" in entry) converted.scores[level] = entry.scores;
+      if ("avSingles" in entry && entry.avSingles !== undefined) converted.avSingles[level] = entry.avSingles;
+      if ("avDoubles" in entry && entry.avDoubles !== undefined) converted.avDoubles[level] = entry.avDoubles;
+    });
+    return converted;
+  }
+
+  function validateProfileV0(data){
     if (data === null || typeof data !== "object" || Array.isArray(data)){
       return { valid: false, error: "Top-level JSON must be an object mapping level numbers to level configs." };
     }
-    var keys = Object.keys(data);
+    if ("version" in data && (typeof data.version !== "number" || !Number.isFinite(data.version))){
+      return { valid: false, error: "\"version\" must be a number." };
+    }
+    var keys = Object.keys(data).filter(function(key){ return key !== "version"; });
     if (keys.length === 0){
       return { valid: false, error: "Data is empty — add at least one level." };
     }
@@ -73,27 +87,99 @@
     return { valid: true };
   }
 
+  // Validates a level->value dict (the shape each of v1's "scores"/"avSingles"/"avDoubles"
+  // fields uses). checkValue validates one entry's value and returns an error string, or
+  // null if it's fine.
+  function validateLevelKeyedDict(dict, fieldName, checkValue){
+    if (dict === null || typeof dict !== "object" || Array.isArray(dict)){
+      return { valid: false, error: "\"" + fieldName + "\" must be an object mapping level numbers to values." };
+    }
+    var keys = Object.keys(dict);
+    for (var i = 0; i < keys.length; i++){
+      var key = keys[i];
+      if (!/^\d+$/.test(key)){
+        return { valid: false, error: "\"" + fieldName + "\": level key \"" + key + "\" must be a whole number." };
+      }
+      var error = checkValue(dict[key]);
+      if (error) return { valid: false, error: "\"" + fieldName + "\", level " + key + ": " + error };
+    }
+    return { valid: true, keys: keys };
+  }
+
+  // v1 shape: { version: 1, scores: {level: [numbers]}, avSingles: {level: number}, avDoubles: {level: number} }.
+  // avSingles/avDoubles are optional dicts; scores is required and must cover the lowest
+  // level (nothing below it to inherit from), same as v0's rule for its lowest level.
+  function validateProfileV1(data){
+    if (data === null || typeof data !== "object" || Array.isArray(data)){
+      return { valid: false, error: "Top-level JSON must be an object." };
+    }
+    var scoresCheck = validateLevelKeyedDict(data.scores, "scores", function(v){
+      var ok = Array.isArray(v) && v.length > 0 && v.every(function(n){
+        return typeof n === "number" && Number.isFinite(n);
+      });
+      return ok ? null : "must be a non-empty array of numbers.";
+    });
+    if (!scoresCheck.valid) return scoresCheck;
+    if (scoresCheck.keys.length === 0){
+      return { valid: false, error: "Data is empty — add at least one level under \"scores\"." };
+    }
+    var minScoreLevel = Math.min.apply(null, scoresCheck.keys.map(Number));
+
+    for (var f = 0; f < 2; f++){
+      var fieldName = f === 0 ? "avSingles" : "avDoubles";
+      if (data[fieldName] === undefined) continue;
+      var fieldCheck = validateLevelKeyedDict(data[fieldName], fieldName, function(v){
+        return (typeof v === "number" && Number.isFinite(v)) ? null : "must be a number.";
+      });
+      if (!fieldCheck.valid) return fieldCheck;
+      var belowLowest = fieldCheck.keys.some(function(key){ return Number(key) < minScoreLevel; });
+      if (belowLowest){
+        return { valid: false, error: "\"" + fieldName + "\" has a level below " + minScoreLevel + ", the lowest level defined in \"scores\"." };
+      }
+    }
+
+    return { valid: true };
+  }
+
+  // Parses+validates level data of either version and always returns it as current-version
+  // (v1) data — v0 input is validated against the v0 schema, then converted. `migrated` says
+  // whether the caller should persist the (converted) result back over the original.
+  function normalizeProfile(data){
+    var version = getProfileVersion(data);
+    if (version === 0){
+      var v0Check = validateProfileV0(data);
+      if (!v0Check.valid) return { valid: false, error: v0Check.error };
+      return { valid: true, data: convertProfileV0ToV1(data), migrated: true };
+    }
+    if (version === PROFILE_CURRENT_VERSION){
+      var v1Check = validateProfileV1(data);
+      if (!v1Check.valid) return { valid: false, error: v1Check.error };
+      return { valid: true, data: data, migrated: false };
+    }
+    return { valid: false, error: "Unsupported profile version: " + version + "." };
+  }
+
   // All app data lives under one localStorage key, shaped as:
-  //   { settings: { levelData, warmupLevel }, currentSession, previousSessions }
+  //   { profile: { levelData }, warmupLevel, currentSession, previousSessions }
   // Read-modify-write helpers below load/save the whole blob so each piece
   // of state can still be read, saved, and cleared independently.
 
   function migrateLegacyData(){
-    var migrated = { settings: {}, previousSessions: [] };
+    var migrated = { profile: {}, previousSessions: [] };
     var found = false;
     try {
       var rawLevelData = localStorage.getItem(LEGACY_LEVEL_DATA_KEY);
       if (rawLevelData){
         var parsedLevelData = JSON.parse(rawLevelData);
-        if (validateLevelData(parsedLevelData).valid){
-          migrated.settings.levelData = parsedLevelData;
+        if (validateProfileV0(parsedLevelData).valid){
+          migrated.profile.levelData = convertProfileV0ToV1(parsedLevelData);
           found = true;
         }
       }
       var rawWarmup = localStorage.getItem(LEGACY_WARMUP_LEVEL_KEY);
       var warmupVal = parseInt(rawWarmup, 10);
       if (Number.isFinite(warmupVal) && warmupVal >= MIN_LEVEL){
-        migrated.settings.warmupLevel = warmupVal;
+        migrated.warmupLevel = warmupVal;
         found = true;
       }
       var rawSession = localStorage.getItem(LEGACY_SESSION_KEY);
@@ -118,14 +204,29 @@
       var raw = localStorage.getItem(STORAGE_KEY);
       var parsed = raw ? JSON.parse(raw) : null;
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)){
-        parsed = migrateLegacyData() || { settings: {}, previousSessions: [] };
+        parsed = migrateLegacyData() || { profile: {}, previousSessions: [] };
         writeStoredBlob(parsed);
       }
-      if (!parsed.settings || typeof parsed.settings !== "object") parsed.settings = {};
+      // Pre-"profile" blobs kept this same data under "settings" — migrate it
+      // over (once) rather than losing it, but only if "profile" isn't already there.
+      var needsRewrite = false;
+      if ((!parsed.profile || typeof parsed.profile !== "object") && parsed.settings && typeof parsed.settings === "object"){
+        parsed.profile = parsed.settings;
+        needsRewrite = true;
+      }
+      delete parsed.settings;
+      if (!parsed.profile || typeof parsed.profile !== "object") parsed.profile = {};
+      // warmupLevel used to live inside profile/settings — pull it out to the root.
+      if (parsed.warmupLevel === undefined && parsed.profile.warmupLevel !== undefined){
+        parsed.warmupLevel = parsed.profile.warmupLevel;
+        needsRewrite = true;
+      }
+      delete parsed.profile.warmupLevel;
       if (!Array.isArray(parsed.previousSessions)) parsed.previousSessions = [];
+      if (needsRewrite) writeStoredBlob(parsed);
       return parsed;
     } catch (e){
-      return { settings: {}, previousSessions: [] };
+      return { profile: {}, previousSessions: [] };
     }
   }
 
@@ -133,25 +234,35 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(blob)); } catch (e){}
   }
 
+  // Reads level data from storage, upgrading it to the current version in place
+  // (persisted immediately) if it was still stored under an older version.
   function readStoredRawData(){
-    var levelData = readStoredBlob().settings.levelData;
-    return levelData && validateLevelData(levelData).valid ? levelData : null;
+    var blob = readStoredBlob();
+    var levelData = blob.profile.levelData;
+    if (!levelData) return null;
+    var normalized = normalizeProfile(levelData);
+    if (!normalized.valid) return null;
+    if (normalized.migrated){
+      blob.profile.levelData = normalized.data;
+      writeStoredBlob(blob);
+    }
+    return normalized.data;
   }
 
   function readStoredWarmupLevel(){
-    var val = readStoredBlob().settings.warmupLevel;
+    var val = readStoredBlob().warmupLevel;
     return typeof val === "number" && Number.isFinite(val) && val >= MIN_LEVEL ? val : null;
   }
 
   function saveWarmupLevel(level){
     var blob = readStoredBlob();
-    blob.settings.warmupLevel = level;
+    blob.warmupLevel = level;
     writeStoredBlob(blob);
   }
 
   function clearWarmupLevel(){
     var blob = readStoredBlob();
-    delete blob.settings.warmupLevel;
+    delete blob.warmupLevel;
     writeStoredBlob(blob);
   }
 
@@ -267,33 +378,30 @@
   }
 
   var activeRawData = null;
-  var levelData = null;
-  var levelKeys = null; // ascending numeric level keys present in levelData
+  var levelKeys = null; // ascending numeric level keys present in activeRawData.scores
 
   function setActiveData(raw){
     activeRawData = raw;
-    levelData = fillGaps(raw);
-    levelKeys = Object.keys(levelData).map(Number).sort(function(a, b){ return a - b; });
+    levelKeys = Object.keys(raw.scores || {}).map(Number).sort(function(a, b){ return a - b; });
   }
 
   function clearActiveData(){
     activeRawData = null;
-    levelData = null;
     levelKeys = null;
   }
 
   // Persists level data to storage and makes it the active data set.
-  function saveLevelData(raw){
+  function saveProfile(raw){
     var blob = readStoredBlob();
-    blob.settings.levelData = raw;
+    blob.profile.levelData = raw;
     writeStoredBlob(blob);
     setActiveData(raw);
   }
 
   // Clears level data from storage and from the active data set.
-  function clearLevelData(){
+  function clearProfile(){
     var blob = readStoredBlob();
-    delete blob.settings.levelData;
+    delete blob.profile.levelData;
     writeStoredBlob(blob);
     clearActiveData();
   }
@@ -330,16 +438,31 @@
     return Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, base + delta));
   }
 
-  // A level with no explicit table entry inherits from the nearest lower level that has one.
-  function getConfig(level){
-    if (!levelKeys) return undefined;
-    var target = Number(level);
+  // Looks up the value for the nearest level <= target within a level->value dict
+  // (v1's "scores"/"avSingles"/"avDoubles" shape), or undefined if none qualifies.
+  function nearestFieldValue(dict, target){
     var resolvedKey = null;
-    for (var i = 0; i < levelKeys.length; i++){
-      if (levelKeys[i] > target) break;
-      resolvedKey = levelKeys[i];
-    }
-    return resolvedKey === null ? undefined : levelData[String(resolvedKey)];
+    Object.keys(dict || {}).forEach(function(key){
+      var num = Number(key);
+      if (num <= target && (resolvedKey === null || num > resolvedKey)) resolvedKey = num;
+    });
+    return resolvedKey === null ? undefined : dict[String(resolvedKey)];
+  }
+
+  // A level with no explicit "scores" entry inherits from the nearest lower level that has
+  // one; same independently for avSingles/avDoubles. Levels below the lowest scores entry
+  // have no config at all (nothing to inherit from — validateProfileV1 guarantees the
+  // lowest scores level is also the lowest level defined anywhere in the table).
+  function getConfig(level){
+    if (!activeRawData || !levelKeys || !levelKeys.length) return undefined;
+    var target = Number(level);
+    if (target < levelKeys[0]) return undefined;
+    var config = { scores: nearestFieldValue(activeRawData.scores, target) };
+    var avSingles = nearestFieldValue(activeRawData.avSingles, target);
+    var avDoubles = nearestFieldValue(activeRawData.avDoubles, target);
+    if (avSingles !== undefined) config.avSingles = avSingles;
+    if (avDoubles !== undefined) config.avDoubles = avDoubles;
+    return config;
   }
 
   // Resolves a level's raw "scores" config into absolute target values. A negative
@@ -365,11 +488,10 @@
     return resolved;
   }
 
-  // Default table for a fresh level with no data yet: 990 first try, then -5 per
-  // subsequent try forever (resolveScores keeps subtracting the trailing -5).
-  function createDefaultLevelData(level){
-    var raw = {};
-    raw[String(level)] = { scores: [990, -10] };
+  // Default table for a fresh level with no data yet: 990 first try, then -10 per try
+  function createDefaultProfile(level){
+    var raw = { version: PROFILE_CURRENT_VERSION, scores: {}, avSingles: {}, avDoubles: {} };
+    raw.scores[String(level)] = [990, -10];
     return raw;
   }
 
@@ -380,7 +502,9 @@
     MIN_LEVEL: MIN_LEVEL,
     MAX_LEVEL: MAX_LEVEL,
     DEFAULT_WARMUP_LEVEL: DEFAULT_WARMUP_LEVEL,
-    validateLevelData: validateLevelData,
+    normalizeProfile: normalizeProfile,
+    getProfileVersion: getProfileVersion,
+    convertProfileV0ToV1: convertProfileV0ToV1,
     readStoredWarmupLevel: readStoredWarmupLevel,
     saveWarmupLevel: saveWarmupLevel,
     clearWarmupLevel: clearWarmupLevel,
@@ -391,8 +515,8 @@
     readPreviousSessions: readPreviousSessions,
     deleteSession: deleteSession,
     formatSessionDate: formatSessionDate,
-    saveLevelData: saveLevelData,
-    clearLevelData: clearLevelData,
+    saveProfile: saveProfile,
+    clearProfile: clearProfile,
     getActiveRawData: getActiveRawData,
     getLevelKeys: getLevelKeys,
     canStepLevel: canStepLevel,
@@ -400,7 +524,7 @@
     stepLevel: stepLevel,
     getConfig: getConfig,
     resolveScores: resolveScores,
-    createDefaultLevelData: createDefaultLevelData
+    createDefaultProfile: createDefaultProfile
   };
 
   // ---- Training session state ----

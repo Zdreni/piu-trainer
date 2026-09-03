@@ -48,7 +48,7 @@
     TrainingSession.resetSessionHistory();
     LevelModel.saveWarmupLevel(val);
     if (!LevelModel.getActiveRawData()){
-      LevelModel.saveLevelData(LevelModel.createDefaultLevelData(val));
+      LevelModel.saveProfile(LevelModel.createDefaultProfile(val));
     }
     TrainingSession.start(val);
   });

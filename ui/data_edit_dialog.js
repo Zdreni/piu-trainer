@@ -30,7 +30,7 @@
       var warmup = LevelModel.readStoredWarmupLevel();
       if (warmup !== null) settings.warmupLevel = warmup;
       var activeRawData = LevelModel.getActiveRawData();
-      if (activeRawData) settings.levelData = activeRawData;
+      if (activeRawData) settings.profile = activeRawData;
       return settings;
     }
 
@@ -58,7 +58,7 @@
 
     // Clears every setting the app keeps in localStorage and returns to the pre-save state.
     function clearAllData(){
-      LevelModel.clearLevelData();
+      LevelModel.clearProfile();
       LevelModel.clearWarmupLevel();
       LevelModel.clearSessionState();
       hooks.warmupLevelInput.value = "";
@@ -112,13 +112,13 @@
           dataModalError.hidden = false;
           return;
         }
-        var importCheck = LevelModel.validateLevelData(importedLevels);
+        var importCheck = LevelModel.normalizeProfile(importedLevels);
         if (!importCheck.valid){
           dataModalError.textContent = importCheck.error;
           dataModalError.hidden = false;
           return;
         }
-        LevelModel.saveLevelData(importedLevels);
+        LevelModel.saveProfile(importCheck.data);
         closeDataModal();
         if (hooks.getCurrentLevel() !== null) hooks.render();
         else hooks.refreshSetup();
@@ -141,7 +141,7 @@
       }
 
       if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)){
-        dataModalError.textContent = "Top-level JSON must be an object with \"warmupLevel\" and/or \"levelData\".";
+        dataModalError.textContent = "Top-level JSON must be an object with \"warmupLevel\" and/or \"profile\".";
         dataModalError.hidden = false;
         return;
       }
@@ -151,10 +151,11 @@
         return;
       }
 
-      if (parsed.levelData !== undefined){
-        var levelsCheck = LevelModel.validateLevelData(parsed.levelData);
-        if (!levelsCheck.valid){
-          dataModalError.textContent = "levelData: " + levelsCheck.error;
+      var profileCheck;
+      if (parsed.profile !== undefined){
+        profileCheck = LevelModel.normalizeProfile(parsed.profile);
+        if (!profileCheck.valid){
+          dataModalError.textContent = "profile: " + profileCheck.error;
           dataModalError.hidden = false;
           return;
         }
@@ -166,10 +167,10 @@
         return;
       }
 
-      if (parsed.levelData !== undefined){
-        LevelModel.saveLevelData(parsed.levelData);
+      if (parsed.profile !== undefined){
+        LevelModel.saveProfile(profileCheck.data);
       } else {
-        LevelModel.clearLevelData();
+        LevelModel.clearProfile();
       }
 
       if (parsed.warmupLevel !== undefined){
