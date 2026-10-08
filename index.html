@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="level-controller.css?v=145">
+<link rel="stylesheet" href="level-controller.css?v=147">
 </head>
 <body>
 
@@ -60,10 +60,23 @@
         <div class="eyebrow">Chart</div>
         <div class="mode-row">
           <div class="mode-group">
-            <button type="button" class="mode-btn" id="modeSinglesBtn">Singles</button>
-            <button type="button" class="mode-btn" id="modeDoublesBtn">Doubles</button>
+            <button type="button" class="mode-btn has-subtitle" id="modeSinglesBtn">
+              Singles
+              <span class="mode-btn-subtitle" id="singlesLevelSubtitle">Level --</span>
+            </button>
+            <button type="button" class="mode-btn has-subtitle" id="modeDoublesBtn">
+              Doubles
+              <span class="mode-btn-subtitle" id="doublesLevelSubtitle">Level --</span>
+            </button>
           </div>
-          <button type="button" class="mode-btn" id="modeRandomBtn">Random</button>
+          <button type="button" class="mode-btn has-subtitle" id="modeRandomBtn">
+            Random
+            <span class="mode-btn-subtitle">single OR double<br>per level</span>
+          </button>
+          <button type="button" class="mode-btn has-subtitle" id="modeClimbBtn">
+            Both
+            <span class="mode-btn-subtitle">single AND double<br>per level</span>
+          </button>
         </div>
         <div class="number-wrap">
           <div class="burst pink" id="levelBurst"></div>
@@ -140,11 +153,11 @@
 
   </div>
 
-  <script src="model.js?v=17"></script>
+  <script src="model.js?v=20"></script>
   <script src="ui/tools.js?v=13"></script>
   <script src="ui/svg.js?v=1"></script>
   <script src="ui/session_tries_history.js?v=16"></script>
-  <script src="ui/session_chart_level.js?v=6"></script>
+  <script src="ui/session_chart_level.js?v=8"></script>
   <script src="ui/session_try_score_target.js?v=5"></script>
   <script src="ui/session_screen.js?v=48"></script>
   <script src="ui/session_finish_confirmation.js?v=3"></script>

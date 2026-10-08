@@ -10,6 +10,9 @@
   var modeSinglesBtn = document.getElementById("modeSinglesBtn");
   var modeDoublesBtn = document.getElementById("modeDoublesBtn");
   var modeRandomBtn = document.getElementById("modeRandomBtn");
+  var modeClimbBtn = document.getElementById("modeClimbBtn");
+  var singlesLevelSubtitle = document.getElementById("singlesLevelSubtitle");
+  var doublesLevelSubtitle = document.getElementById("doublesLevelSubtitle");
   var levelNumberEl = document.getElementById("levelNumber");
   var levelBurstEl = document.getElementById("levelBurst");
   var levelDownBtn = document.getElementById("levelDownBtn");
@@ -53,9 +56,13 @@
 
   function updateModeButtons(){
     var mode = SessionModel.getMode();
+    var levels = SessionModel.getSnapshot().levels;
     modeSinglesBtn.classList.toggle("is-active", mode === "singles");
     modeDoublesBtn.classList.toggle("is-active", mode === "doubles");
     modeRandomBtn.classList.toggle("is-active", mode === "random");
+    modeClimbBtn.classList.toggle("is-active", mode === "climb");
+    singlesLevelSubtitle.textContent = "Level " + levels.singles;
+    doublesLevelSubtitle.textContent = "Level " + levels.doubles;
   }
 
   // Vertically centers the level +/- buttons on the level indicator (horizontal position
@@ -183,6 +190,11 @@
       } else {
         hooks.onRerollRandom();
       }
+    });
+
+    modeClimbBtn.addEventListener("click", function(){
+      if (SessionModel.getMode() === "climb") return;
+      hooks.onSwitchMode("climb");
     });
   }
 

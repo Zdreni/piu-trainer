@@ -278,7 +278,7 @@
     var parsed = readStoredBlob().currentSession;
     try {
       if (!parsed || typeof parsed !== "object") return null;
-      if (parsed.mode !== "singles" && parsed.mode !== "doubles" && parsed.mode !== "random") return null;
+      if (parsed.mode !== "singles" && parsed.mode !== "doubles" && parsed.mode !== "random" && parsed.mode !== "climb") return null;
       if (parsed.currentType !== "S" && parsed.currentType !== "D") return null;
       var levels = parsed.levels;
       if (!levels || typeof levels !== "object") return null;
@@ -528,9 +528,10 @@
   };
 
   // ---- Training session state ----
-  // levels tracks singles/doubles/random progress independently. mode is which
-  // one is currently being played; currentType is the S/D letter shown before
-  // the level number (fixed for singles/doubles, rolled for random).
+  // levels tracks each mode's progress independently. mode is which one is
+  // currently being played; currentType is the S/D letter shown before the
+  // level number (fixed for singles/doubles, rolled for random, and selected
+  // from the lower-progress chart in climb mode).
   var sessionState = {
     mode: null,
     currentType: null,
@@ -539,8 +540,14 @@
     startedAt: null
   };
 
+  function chooseClimbType(){
+    sessionState.currentType = sessionState.levels.singles <= sessionState.levels.doubles ? "S" : "D";
+  }
+
   function currentLevel(){
-    return sessionState.mode === null ? null : sessionState.levels[sessionState.mode];
+    if (sessionState.mode === null) return null;
+    if (sessionState.mode === "climb") return sessionState.levels[sessionState.currentType === "D" ? "doubles" : "singles"];
+    return sessionState.levels[sessionState.mode];
   }
 
   function currentChartTypeLetter(){
@@ -597,9 +604,14 @@
   // pass). Does not touch the other tracks. In random mode, moving to a
   // different level rerolls the type too.
   function startAt(level){
-    sessionState.levels[sessionState.mode] = level;
+    if (sessionState.mode === "climb"){
+      sessionState.levels[sessionState.currentType === "S" ? "singles" : "doubles"] = level;
+    } else {
+      sessionState.levels[sessionState.mode] = level;
+    }
     sessionState.attemptIndex = 0;
     if (sessionState.mode === "random") sessionState.currentType = Math.random() < 0.5 ? "S" : "D";
+    if (sessionState.mode === "climb") chooseClimbType();
   }
 
   // Switches which track (singles/doubles/random) is being played. Picks a
@@ -609,12 +621,13 @@
 
     // Entering random mode from a specific type continues at that type's level,
     // rather than snapping to the random track's own (possibly stale) level.
-    if (mode === "random" && (prevMode === "singles" || prevMode === "doubles")){
-      sessionState.levels.random = sessionState.levels[prevMode];
+    if (mode === "random" && (prevMode === "singles" || prevMode === "doubles" || prevMode === "climb")){
+      sessionState.levels.random = currentLevel();
     }
 
     sessionState.mode = mode;
     sessionState.currentType = mode === "singles" ? "S" : mode === "doubles" ? "D" : (Math.random() < 0.5 ? "S" : "D");
+    if (mode === "climb") chooseClimbType();
     sessionState.attemptIndex = 0;
   }
 
@@ -624,8 +637,7 @@
     sessionState.attemptIndex = 0;
   }
 
-  // Begins a brand-new session at `level` for all three tracks (singles,
-  // doubles, random), defaulting to random mode.
+  // Begins a brand-new session at `level` for all tracks, defaulting to random mode.
   function startSession(level){
     sessionState.levels = { singles: level, doubles: level, random: level };
     sessionState.mode = "random";
@@ -652,15 +664,21 @@
     sessionState.startedAt = savedState.startedAt;
   }
 
-  // Records a pass on the current level: in random mode, bumps the other
-  // tracks forward if they haven't already passed this level, then advances
-  // the current track to the next level.
+  // Records a pass on the current level: climb advances the selected chart
+  // track and then selects whichever track is behind; random mode catches both
+  // type tracks up to the newly unlocked level without moving ahead tracks back.
   function recordPass(){
     var level = currentLevel();
+    if (sessionState.mode === "climb"){
+      sessionState.levels[sessionState.currentType === "S" ? "singles" : "doubles"] = level + 1;
+      chooseClimbType();
+      sessionState.attemptIndex = 0;
+      return;
+    }
     if (sessionState.mode === "random"){
-      var oldRandomLevel = sessionState.levels.random;
-      if (sessionState.levels.singles <= oldRandomLevel) sessionState.levels.singles += 1;
-      if (sessionState.levels.doubles <= oldRandomLevel) sessionState.levels.doubles += 1;
+      var nextLevel = level + 1;
+      sessionState.levels.singles = Math.max(sessionState.levels.singles, nextLevel);
+      sessionState.levels.doubles = Math.max(sessionState.levels.doubles, nextLevel);
     }
     startAt(level + 1);
   }

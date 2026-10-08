@@ -309,21 +309,27 @@ body{
   flex-wrap:wrap;
   align-items:center;
   justify-content:center;
-  gap:0.7rem;
+  gap:0.4rem;
   row-gap:0.5rem;
   padding:0 0.6rem;
+}
+#modeRandomBtn{
+  margin-left:0.6rem;
 }
 .mode-group{
   display:flex;
   gap:0.4rem;
 }
 .mode-btn{
+  width:6.75rem;
+  height:6.75rem;
+  flex:0 0 6.75rem;
   font-family:var(--font-display);
   font-weight:700;
   letter-spacing:0.02em;
   text-transform:uppercase;
   font-size:0.88rem;
-  padding:0.8rem 0.75rem;
+  padding:0.2rem;
   border:1px solid var(--line);
   border-radius:14px;
   background:var(--bg-panel);
@@ -331,6 +337,23 @@ body{
   box-shadow:none;
   cursor:pointer;
   transition:transform 150ms ease, background 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+.mode-btn.has-subtitle{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0.8rem;
+  justify-content:center;
+  font-size:0.88rem;
+}
+.mode-btn-subtitle{
+  width:100%;
+  font-size:0.75rem;
+  font-weight:500;
+  letter-spacing:0;
+  text-transform:none;
+  text-align:center;
+  line-height:1.1;
 }
 .mode-btn:active{transform:scale(0.95);}
 
@@ -344,6 +367,11 @@ body{
   background:linear-gradient(180deg, color-mix(in srgb, var(--cyan) 20%, transparent) 0%, color-mix(in srgb, var(--cyan) 10%, transparent) 150%), var(--bg-panel);
   border-color:color-mix(in srgb, var(--cyan) 18%, transparent);
   color:color-mix(in srgb, var(--cyan) 25%, white);
+}
+#modeClimbBtn.is-active{
+  background:linear-gradient(180deg, color-mix(in srgb, var(--yellow) 20%, transparent) 0%, color-mix(in srgb, var(--yellow) 10%, transparent) 150%), var(--bg-panel);
+  border-color:color-mix(in srgb, var(--yellow) 18%, transparent);
+  color:color-mix(in srgb, var(--yellow) 25%, white);
 }
 #modeDoublesBtn.is-active{
   background:linear-gradient(180deg, color-mix(in srgb, var(--doubles) 20%, transparent) 0%, color-mix(in srgb, var(--doubles) 10%, transparent) 150%), var(--bg-panel);
