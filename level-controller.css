@@ -415,31 +415,56 @@ body{
   border-color:color-mix(in srgb, var(--cyan) 38%, #000);
 }
 .mode-btn-ball-pair{
-  display:flex;
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
   align-items:center;
-  justify-content:center;
+  justify-items:center;
   min-height:2.7rem;
-  gap:0.18rem;
+  width:min(3.933rem, 100%);
+  min-width:0;
 }
 .mode-btn-ball-pair .mode-btn-ball{
-  width:1.9rem;
-  height:1.9rem;
-  border-width:0.12rem;
-  font-size:0.85rem;
+  position:relative;
+  width:100%;
+  height:auto;
+  min-height:0;
+  aspect-ratio:1;
+  grid-row:1;
+  grid-column:1 / span 3;
+  border-width:0.18rem;
+  font-size:1.45rem;
+  line-height:0.9;
+  white-space:nowrap;
+}
+.mode-btn-ball-pair .mode-btn-ball-single{
+  left:2.35%;
+}
+.mode-btn-ball-pair .mode-btn-ball-double{
+  grid-column:2 / span 3;
+  left:-2.35%;
+}
+.mode-btn-ball-pair .mode-btn-ball + .mode-btn-ball{
+  margin-left:0;
+}
+.mode-btn-ball-pair .mode-btn-ball-single{
+  z-index:1;
+}
+.mode-btn-ball-pair:not(.is-doubles-current) .mode-btn-ball-double,
+.mode-btn-ball-pair.is-doubles-current .mode-btn-ball-single{
+  transform:scale(0.9);
+  font-size:0;
+  text-shadow:none;
+}
+.mode-btn-ball-pair.is-doubles-current .mode-btn-ball-double{
+  z-index:2;
 }
 .mode-btn-ball-single{
-  background:color-mix(in srgb, var(--pink) 22%, transparent);
+  background:color-mix(in srgb, var(--pink) 22%, var(--bg-panel));
   border-color:color-mix(in srgb, var(--pink) 38%, #000);
 }
 .mode-btn-ball-double{
-  background:color-mix(in srgb, var(--doubles) 22%, transparent);
+  background:color-mix(in srgb, var(--doubles) 22%, var(--bg-panel));
   border-color:color-mix(in srgb, var(--doubles) 38%, #000);
-}
-.mode-btn-ball-plus{
-  color:var(--text-mid);
-  font-size:1rem;
-  font-weight:900;
-  line-height:1;
 }
 .mode-btn-subtitle{
   width:100%;
@@ -528,14 +553,14 @@ body{
   height:2.95rem;
   border-width:0.18rem;
   border-color:color-mix(in srgb, var(--pink) 38%, #000);
-  background:color-mix(in srgb, var(--pink) 22%, transparent);
+  background:color-mix(in srgb, var(--pink) 22%, var(--bg-panel));
   padding-top:0.08rem;
   gap:0.02em;
   box-shadow:0 8px 22px rgba(0,0,0,0.18);
   align-self:center;
 }
 .level-ball--mode.type-doubles{
-  background:color-mix(in srgb, var(--doubles) 22%, transparent);
+  background:color-mix(in srgb, var(--doubles) 22%, var(--bg-panel));
   border-color:color-mix(in srgb, var(--doubles) 38%, #000);
 }
 .level-ball--mode .level-ball-type{

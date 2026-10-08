@@ -156,8 +156,10 @@
   // ---- events ----
   SessionTryScoreTarget.init({
     onPass: function(){
-      SessionTriesHistory.resolveTry(SessionModel.currentLabel(), true);
+      var passedLabel = SessionModel.currentLabel();
+      SessionTriesHistory.resolveTry(passedLabel, true);
       SessionModel.recordPass();
+      SessionChartLevel.syncTopToLowerLevel();
       render();
     },
     onFail: function(){

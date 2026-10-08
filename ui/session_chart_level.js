@@ -27,6 +27,7 @@
   var lastLevelValue = null;
   var lastAvText = null;
   var lastAvValue = null;
+  var climbTopIsDoubles = null;
 
   function pulse(el){
     el.classList.remove("av-pulse");
@@ -74,6 +75,12 @@
     modeClimbBtn.classList.toggle("is-active", mode === "climb");
     ensureModeBall(modeSinglesBtn, levels.singles, false);
     ensureModeBall(modeDoublesBtn, levels.doubles, true);
+    modeClimbBtn.querySelector(".mode-btn-ball-single").textContent = String(levels.singles);
+    modeClimbBtn.querySelector(".mode-btn-ball-double").textContent = String(levels.doubles);
+    if (mode === "climb" || climbTopIsDoubles === null){
+      climbTopIsDoubles = SessionModel.currentChartTypeLetter() === "D";
+    }
+    modeClimbBtn.querySelector(".mode-btn-ball-pair").classList.toggle("is-doubles-current", climbTopIsDoubles);
   }
 
   // Vertically centers the level +/- buttons on the level indicator (horizontal position
@@ -132,6 +139,12 @@
     lastLevelValue = null;
     lastAvText = null;
     lastAvValue = null;
+    climbTopIsDoubles = null;
+  }
+
+  function syncTopToLowerLevel(){
+    var levels = SessionModel.getSnapshot().levels;
+    climbTopIsDoubles = levels.doubles < levels.singles;
   }
 
   // Renders the level ball for the current level, sliding it in when it differs
@@ -215,6 +228,7 @@
     renderAv: renderAv,
     positionNavButtons: positionNavButtons,
     positionRecAv: positionRecAv,
+    syncTopToLowerLevel: syncTopToLowerLevel,
     reset: reset
   };
 })(window);
