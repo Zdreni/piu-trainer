@@ -26,7 +26,11 @@
 }
 
 *{box-sizing:border-box;}
-html,body{height:100%;}
+html{
+  height:100%;
+  font-size:clamp(16px, 2.3vw, 18px);
+}
+body{height:100%;}
 body{
   margin:0;
   background:var(--bg-void);
@@ -48,11 +52,12 @@ body{
   position:relative;
   z-index:1;
   height:100dvh;
-  max-width:520px;
+  max-width:clamp(520px, 75vw, 600px);
   margin:0 auto;
   overflow:hidden;
   display:flex;
   flex-direction:column;
+  container-type:inline-size;
 }
 
 /* ---------- shared app header ---------- */
@@ -165,6 +170,7 @@ body{
   font-weight:800;
   font-variant-numeric:tabular-nums;
   font-size:clamp(4.8rem, 24vw, 8rem);
+  font-size:clamp(4.8rem, 24cqi, 8rem);
   line-height:1;
   letter-spacing:-0.03em;
   background:linear-gradient(180deg, #ffab85 0%, var(--pink) 120%);
@@ -190,6 +196,8 @@ body{
   position:relative;
   width:clamp(6rem, 25vw, 8.4rem);
   height:clamp(6rem, 25vw, 8.4rem);
+  width:clamp(6rem, 25cqi, 8.4rem);
+  height:clamp(6rem, 25cqi, 8.4rem);
   border-radius:50%;
   display:flex;
   flex-direction:column;
@@ -207,6 +215,7 @@ body{
   font-family:var(--font-display);
   font-weight:800;
   font-size:clamp(0.78rem, 2.8vw, 1.02rem);
+  font-size:clamp(0.78rem, 2.8cqi, 1.02rem);
   letter-spacing:0.14em;
   text-transform:uppercase;
   color:#fff;
@@ -218,6 +227,7 @@ body{
   font-weight:800;
   font-variant-numeric:tabular-nums;
   font-size:clamp(3.6rem, 17vw, 5.6rem);
+  font-size:clamp(3.6rem, 17cqi, 5.6rem);
   line-height:1;
   letter-spacing:-0.02em;
   color:#fff;
@@ -239,6 +249,7 @@ body{
   font-weight:800;
   font-variant-numeric:tabular-nums;
   font-size:clamp(4.8rem, 24vw, 8rem);
+  font-size:clamp(4.8rem, 24cqi, 8rem);
   line-height:1;
   letter-spacing:-0.02em;
   background:linear-gradient(180deg, var(--yellow-light) 0%, var(--yellow) 120%);
@@ -301,16 +312,14 @@ body{
   gap:0.4rem;
 }
 .level-block .number-wrap{
-  margin-top:1.3rem;
+  margin-top:3rem;
 }
 
 .mode-row{
-  display:flex;
-  flex-wrap:wrap;
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
   align-items:center;
-  justify-content:space-between;
-  gap:0.4rem;
-  row-gap:0.5rem;
+  gap:clamp(0.4rem, 3cqi, 1.2rem);
   width:100%;
   padding:0 0.6rem;
 }
@@ -334,8 +343,11 @@ body{
   white-space:nowrap;
 }
 .mode-group{
-  display:flex;
-  gap:0.4rem;
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:clamp(0.2rem, 1.5cqi, 0.4rem);
+  width:100%;
+  min-width:0;
 }
 .mode-selection-label{
   font-size:0.72rem;
@@ -346,14 +358,15 @@ body{
   text-align:center;
 }
 .mode-btn{
-  width:6.75rem;
+  width:100%;
   height:6.75rem;
-  flex:0 0 6.75rem;
+  min-width:0;
+  flex:1 1 0;
   font-family:var(--font-display);
   font-weight:700;
   letter-spacing:0.02em;
   text-transform:uppercase;
-  font-size:0.88rem;
+  font-size:clamp(0.68rem, 2.5cqi, 0.88rem);
   padding:0.2rem;
   border:1px solid var(--line);
   border-radius:14px;
@@ -369,7 +382,7 @@ body{
   align-items:center;
   gap:0.8rem;
   justify-content:center;
-  font-size:0.88rem;
+  font-size:clamp(0.68rem, 2.5cqi, 0.88rem);
 }
 .mode-btn-label{
   font-weight:700;
@@ -734,6 +747,8 @@ body{
   flex:0 0 auto;
   width:clamp(3.63rem, 15.7vw, 5.28rem);
   height:clamp(4.8rem, 24vw, 8rem);
+  width:clamp(3.63rem, 15.7cqi, 5.28rem);
+  height:clamp(4.8rem, 24cqi, 8rem);
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -753,6 +768,7 @@ body{
   justify-content:center;
   padding-bottom:0.25em;
   font-size:clamp(2.6rem, 11vw, 4rem);
+  font-size:clamp(2.6rem, 11cqi, 4rem);
   font-weight:800;
   line-height:1;
 }
