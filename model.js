@@ -160,7 +160,7 @@
   }
 
   // All app data lives under one localStorage key, shaped as:
-  //   { profile: { levelData }, warmupLevel, currentSession, previousSessions }
+  //   { profile: { levelData }, warmupLevel, currentSession, previousSessions, preferences }
   // Read-modify-write helpers below load/save the whole blob so each piece
   // of state can still be read, saved, and cleared independently.
 
@@ -263,6 +263,30 @@
   function clearWarmupLevel(){
     var blob = readStoredBlob();
     delete blob.warmupLevel;
+    writeStoredBlob(blob);
+  }
+
+  function readChartTypeSelectorExpanded(){
+    var preferences = readStoredBlob().preferences;
+    if (!preferences || typeof preferences !== "object" || Array.isArray(preferences) ||
+        typeof preferences.chartTypeSelectorExpanded !== "boolean"){
+      return true;
+    }
+    return preferences.chartTypeSelectorExpanded;
+  }
+
+  function saveChartTypeSelectorExpanded(expanded){
+    var blob = readStoredBlob();
+    if (!blob.preferences || typeof blob.preferences !== "object" || Array.isArray(blob.preferences)){
+      blob.preferences = {};
+    }
+    blob.preferences.chartTypeSelectorExpanded = expanded;
+    writeStoredBlob(blob);
+  }
+
+  function clearPreferences(){
+    var blob = readStoredBlob();
+    delete blob.preferences;
     writeStoredBlob(blob);
   }
 
@@ -508,6 +532,9 @@
     readStoredWarmupLevel: readStoredWarmupLevel,
     saveWarmupLevel: saveWarmupLevel,
     clearWarmupLevel: clearWarmupLevel,
+    readChartTypeSelectorExpanded: readChartTypeSelectorExpanded,
+    saveChartTypeSelectorExpanded: saveChartTypeSelectorExpanded,
+    clearPreferences: clearPreferences,
     readSessionState: readSessionState,
     saveSessionState: saveSessionState,
     clearSessionState: clearSessionState,

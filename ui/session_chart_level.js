@@ -11,6 +11,10 @@
   var modeDoublesBtn = document.getElementById("modeDoublesBtn");
   var modeRandomBtn = document.getElementById("modeRandomBtn");
   var modeClimbBtn = document.getElementById("modeClimbBtn");
+  var chartTypeToggle = document.getElementById("chartTypeToggle");
+  var chartTypeOptions = document.getElementById("chartTypeOptions");
+  var chartTypeCurrentMode = document.getElementById("chartTypeCurrentMode");
+  var chartTypeWidget = chartTypeToggle.closest(".level-block");
   var levelNumberEl = document.getElementById("levelNumber");
   var levelBurstEl = document.getElementById("levelBurst");
   var levelDownBtn = document.getElementById("levelDownBtn");
@@ -28,6 +32,17 @@
   var lastAvText = null;
   var lastAvValue = null;
   var climbTopIsDoubles = null;
+
+  function setChartTypeSelectorExpanded(expanded){
+    chartTypeToggle.setAttribute("aria-expanded", String(expanded));
+    chartTypeToggle.setAttribute("aria-label", expanded ? "Minimize chart type selector" : "Expand chart type selector");
+    chartTypeToggle.title = expanded ? "Minimize chart type selector" : "Expand chart type selector";
+    chartTypeToggle.textContent = expanded ? "\u2212" : "+";
+    chartTypeOptions.hidden = !expanded;
+    chartTypeWidget.classList.toggle("is-minimized", !expanded);
+  }
+
+  setChartTypeSelectorExpanded(LevelModel.readChartTypeSelectorExpanded());
 
   function pulse(el){
     el.classList.remove("av-pulse");
@@ -69,10 +84,18 @@
   function updateModeButtons(){
     var mode = SessionModel.getMode();
     var levels = SessionModel.getSnapshot().levels;
+    var modeLabels = {
+      singles: "Singles",
+      doubles: "Doubles",
+      random: "Random, single or double",
+      climb: "Both, singles and doubles"
+    };
     modeSinglesBtn.classList.toggle("is-active", mode === "singles");
     modeDoublesBtn.classList.toggle("is-active", mode === "doubles");
     modeRandomBtn.classList.toggle("is-active", mode === "random");
     modeClimbBtn.classList.toggle("is-active", mode === "climb");
+    chartTypeCurrentMode.className = "chart-type-current-mode mode-" + mode;
+    chartTypeCurrentMode.querySelector("span").textContent = modeLabels[mode] || "";
     ensureModeBall(modeSinglesBtn, levels.singles, false);
     ensureModeBall(modeDoublesBtn, levels.doubles, true);
     modeClimbBtn.querySelector(".mode-btn-ball-single").textContent = String(levels.singles);
@@ -188,6 +211,13 @@
 
   // hooks.onStepLevel(delta), hooks.onSwitchMode(mode), hooks.onRerollRandom()
   function init(hooks){
+    chartTypeToggle.addEventListener("click", function(){
+      var isExpanded = chartTypeToggle.getAttribute("aria-expanded") === "true";
+      setChartTypeSelectorExpanded(!isExpanded);
+      LevelModel.saveChartTypeSelectorExpanded(!isExpanded);
+      window.requestAnimationFrame(hooks.onLayoutChange);
+    });
+
     levelDownBtn.addEventListener("click", function(){
       if (!canStep(-1)) return;
       hooks.onStepLevel(-1);

@@ -31,6 +31,9 @@
       if (warmup !== null) settings.warmupLevel = warmup;
       var activeRawData = LevelModel.getActiveRawData();
       if (activeRawData) settings.profile = activeRawData;
+      settings.preferences = {
+        chartTypeSelectorExpanded: LevelModel.readChartTypeSelectorExpanded()
+      };
       return settings;
     }
 
@@ -61,6 +64,7 @@
       LevelModel.clearProfile();
       LevelModel.clearWarmupLevel();
       LevelModel.clearSessionState();
+      LevelModel.clearPreferences();
       hooks.warmupLevelInput.value = "";
       closeDataModal();
       hooks.refreshSetup();
@@ -141,7 +145,7 @@
       }
 
       if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)){
-        dataModalError.textContent = "Top-level JSON must be an object with \"warmupLevel\" and/or \"profile\".";
+        dataModalError.textContent = "Top-level JSON must be an object with \"warmupLevel\", \"profile\", and/or \"preferences\".";
         dataModalError.hidden = false;
         return;
       }
@@ -167,6 +171,14 @@
         return;
       }
 
+      if (parsed.preferences !== undefined &&
+          (!parsed.preferences || typeof parsed.preferences !== "object" || Array.isArray(parsed.preferences) ||
+           typeof parsed.preferences.chartTypeSelectorExpanded !== "boolean")){
+        dataModalError.textContent = "\"preferences.chartTypeSelectorExpanded\" must be a boolean.";
+        dataModalError.hidden = false;
+        return;
+      }
+
       if (parsed.profile !== undefined){
         LevelModel.saveProfile(profileCheck.data);
       } else {
@@ -179,6 +191,12 @@
       } else {
         LevelModel.clearWarmupLevel();
         hooks.warmupLevelInput.value = "";
+      }
+
+      if (parsed.preferences !== undefined){
+        LevelModel.saveChartTypeSelectorExpanded(parsed.preferences.chartTypeSelectorExpanded);
+      } else {
+        LevelModel.clearPreferences();
       }
 
       closeDataModal();

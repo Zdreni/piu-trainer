@@ -45,6 +45,12 @@
     for (var j = current; j > count; j--) flowGapEl.removeChild(flowGapEl.lastElementChild);
   }
 
+  function recalculateSessionLayout(){
+    SessionChartLevel.positionNavButtons();
+    SessionChartLevel.positionRecAv();
+    layoutFlowChevrons();
+  }
+
   // These three only make sense while the session screen is actually showing
   // (they measure/position elements inside it), so the resize listener is
   // only attached while it's the visible screen, rather than always-on with
@@ -97,9 +103,7 @@
     SessionChartLevel.render(forceAnim);
     SessionTryScoreTarget.render(forceAnim);
 
-    SessionChartLevel.positionNavButtons();
-    SessionChartLevel.positionRecAv();
-    layoutFlowChevrons();
+    recalculateSessionLayout();
     persistSession();
   }
 
@@ -177,7 +181,8 @@
   SessionChartLevel.init({
     onStepLevel: function(delta){ startAt(SessionModel.currentLevel() + delta); },
     onSwitchMode: switchMode,
-    onRerollRandom: rerollRandom
+    onRerollRandom: rerollRandom,
+    onLayoutChange: recalculateSessionLayout
   });
 
   window.UI.TrainingSession = {

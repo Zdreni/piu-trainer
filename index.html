@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="level-controller.css?v=181">
+<link rel="stylesheet" href="level-controller.css?v=191">
 </head>
 <body>
 
@@ -57,32 +57,40 @@
       <button class="level-nav-btn level-nav-right" id="levelUpBtn" title="Increase level" aria-label="Increase level">&#43;</button>
 
       <div class="level-block">
-        <div class="mode-headings">
-          <div class="mode-heading">Select type</div>
-          <div class="mode-heading mode-heading-separator">- or -</div>
-          <div class="mode-heading">Auto select</div>
-        </div>
-        <div class="mode-row">
-          <div class="mode-group">
-            <button type="button" class="mode-btn has-subtitle" id="modeSinglesBtn">
-              Singles
-            </button>
-            <button type="button" class="mode-btn has-subtitle" id="modeDoublesBtn">
-              Doubles
-            </button>
+        <div class="chart-type-widget-header">
+          <div class="mode-headings">
+            <div class="mode-heading">Select type</div>
+            <div class="mode-heading mode-heading-separator">- or -</div>
+            <div class="mode-heading">Auto select</div>
           </div>
-          <div class="mode-group">
-            <button type="button" class="mode-btn has-subtitle" id="modeRandomBtn">
-              <span class="mode-btn-label">Random</span>
-              <span class="mode-btn-ball mode-btn-ball-random" aria-hidden="true">?</span>
-            </button>
-            <button type="button" class="mode-btn has-subtitle" id="modeClimbBtn">
-              <span class="mode-btn-label">Both</span>
-              <span class="mode-btn-ball-pair" aria-hidden="true">
-                <span class="mode-btn-ball mode-btn-ball-single">--</span>
-                <span class="mode-btn-ball mode-btn-ball-double">--</span>
-              </span>
-            </button>
+          <div class="chart-type-current-mode" id="chartTypeCurrentMode" aria-live="polite">
+            Play mode: <span></span>
+          </div>
+          <button type="button" class="chart-type-toggle" id="chartTypeToggle" aria-expanded="true" aria-controls="chartTypeOptions" aria-label="Minimize chart type selector" title="Minimize chart type selector">&#8722;</button>
+        </div>
+        <div id="chartTypeOptions">
+          <div class="mode-row">
+            <div class="mode-group">
+              <button type="button" class="mode-btn has-subtitle" id="modeSinglesBtn">
+                Singles
+              </button>
+              <button type="button" class="mode-btn has-subtitle" id="modeDoublesBtn">
+                Doubles
+              </button>
+            </div>
+            <div class="mode-group">
+              <button type="button" class="mode-btn has-subtitle" id="modeRandomBtn">
+                <span class="mode-btn-label">Random</span>
+                <span class="mode-btn-ball mode-btn-ball-random" aria-hidden="true">?</span>
+              </button>
+              <button type="button" class="mode-btn has-subtitle" id="modeClimbBtn">
+                <span class="mode-btn-label">Both</span>
+                <span class="mode-btn-ball-pair" aria-hidden="true">
+                  <span class="mode-btn-ball mode-btn-ball-single">--</span>
+                  <span class="mode-btn-ball mode-btn-ball-double">--</span>
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -163,16 +171,16 @@
 
   </div>
 
-  <script src="model.js?v=20"></script>
+  <script src="model.js?v=21"></script>
   <script src="ui/tools.js?v=13"></script>
   <script src="ui/svg.js?v=1"></script>
   <script src="ui/session_tries_history.js?v=16"></script>
-  <script src="ui/session_chart_level.js?v=14"></script>
+  <script src="ui/session_chart_level.js?v=20"></script>
   <script src="ui/session_try_score_target.js?v=5"></script>
-  <script src="ui/session_screen.js?v=50"></script>
+  <script src="ui/session_screen.js?v=51"></script>
   <script src="ui/session_finish_confirmation.js?v=3"></script>
   <script src="ui/start_screen.js?v=17"></script>
-  <script src="ui/data_edit_dialog.js?v=1"></script>
+  <script src="ui/data_edit_dialog.js?v=2"></script>
   <script src="ui/history_screen.js?v=13"></script>
   <script src="app.js?v=39"></script>
 
