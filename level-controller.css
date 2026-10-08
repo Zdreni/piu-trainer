@@ -66,11 +66,11 @@ body{
   z-index:5;
   flex:0 0 auto;
   display:grid;
-  grid-template-columns:2.6rem 1fr 2.6rem;
+  grid-template-columns:2.75rem 1fr 2.75rem;
   align-items:center;
   gap:0.5rem;
   min-height:3.6rem;
-  padding:0.6rem 0.9rem;
+  padding:0.6rem 0.5rem;
 }
 .app-header-title{
   text-align:center;
@@ -84,18 +84,22 @@ body{
   text-overflow:ellipsis;
 }
 .app-header-title span{color:var(--brand-accent);}
-.header-btn{
-  width:2.4rem;
-  height:2.4rem;
-  border-radius:50%;
+.header-btn,
+.chart-type-toggle,
+.level-nav-btn{
+  width:2.75rem;
+  height:2.75rem;
   border:1px solid var(--line);
+  border-radius:0.45rem;
   background:var(--bg-panel);
   color:var(--text-mid);
-  font-size:1.1rem;
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
+}
+.header-btn{
+  font-size:1.1rem;
   transition:transform 200ms ease;
 }
 .header-btn:active{transform:scale(0.92);}
@@ -310,8 +314,9 @@ body{
   flex-direction:column;
   align-items:center;
   gap:0.35rem;
-  width:100%;
-  margin-top:1.8rem;
+  width:calc(100% - 1rem);
+  margin-inline:auto;
+  margin-top:clamp(0.75rem, 4vw, 1.5rem);
   padding:0.4rem;
   border:1px solid var(--line);
   border-radius:14px;
@@ -326,19 +331,9 @@ body{
 }
 #chartTypeOptions{width:100%;}
 .chart-type-toggle{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width:2.75rem;
-  height:2.75rem;
   padding:0;
-  border:1px solid var(--line);
-  border-radius:0.45rem;
-  background:var(--bg-panel);
-  color:var(--text-mid);
   font-size:1.1rem;
   line-height:1;
-  cursor:pointer;
 }
 .chart-type-toggle:active{transform:scale(0.95);}
 .session > .number-wrap{
@@ -773,7 +768,7 @@ body{
   align-items:baseline;
   justify-content:center;
   width:fit-content;
-  margin:0.3rem auto 0;
+  margin:clamp(0.65rem, 2.5vw, 1.1rem) auto 0;
   padding:0.18rem 5.4rem;
   border-radius:999px;
   background:#000;
@@ -1178,18 +1173,9 @@ body{
   position:absolute;
   top:50%;
   z-index:5;
-  width:2.6rem;
-  height:2.6rem;
-  border-radius:50%;
-  border:1px solid var(--line);
-  background:var(--bg-panel);
-  color:var(--text-mid);
-  font-size:1.4rem;
+  padding:0;
+  font-size:1.1rem;
   font-weight:700;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
   transform:translateY(-50%);
 }
 .level-nav-btn:active{
@@ -1199,8 +1185,8 @@ body{
   opacity:0.35;
   pointer-events:none;
 }
-.level-nav-left{left:1rem;}
-.level-nav-right{right:1rem;}
+.level-nav-left{left:0.5rem;}
+.level-nav-right{right:0.5rem;}
 
 /* ---------- session screen ---------- */
 .session{

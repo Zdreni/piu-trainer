@@ -51,6 +51,61 @@
     layoutFlowChevrons();
   }
 
+  function animateSessionLayoutChange(changeLayout){
+    var widget = flowGapEl.parentElement.querySelector(".level-block");
+    var widgetHeight = widget.getBoundingClientRect().height;
+    var elements = [];
+    for (var el = widget.nextElementSibling; el; el = el.nextElementSibling){
+      elements.push({ element: el, top: el.getBoundingClientRect().top });
+    }
+    var navButtons = [
+      document.getElementById("levelDownBtn"),
+      document.getElementById("levelUpBtn")
+    ].map(function(button){
+      return { element: button, top: button.getBoundingClientRect().top };
+    });
+
+    changeLayout();
+    recalculateSessionLayout();
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    var nextWidgetHeight = widget.getBoundingClientRect().height;
+    if (Math.abs(widgetHeight - nextWidgetHeight) >= 1){
+      widget.animate([
+        { height: widgetHeight + "px" },
+        { height: nextWidgetHeight + "px" }
+      ], {
+        duration: 260,
+        easing: "ease-out"
+      });
+    }
+
+    elements.forEach(function(item){
+      var offset = item.top - item.element.getBoundingClientRect().top;
+      if (Math.abs(offset) < 1) return;
+      item.element.animate([
+        { transform: "translateY(" + offset + "px)" },
+        { transform: "translateY(0)" }
+      ], {
+        duration: 260,
+        easing: "ease-out"
+      });
+    });
+
+    navButtons.forEach(function(item){
+      var offset = item.top - item.element.getBoundingClientRect().top;
+      if (Math.abs(offset) < 1) return;
+      item.element.animate([
+        { translate: "0 " + offset + "px" },
+        { translate: "0 0" }
+      ], {
+        duration: 260,
+        easing: "ease-out"
+      });
+    });
+  }
+
   // These three only make sense while the session screen is actually showing
   // (they measure/position elements inside it), so the resize listener is
   // only attached while it's the visible screen, rather than always-on with
@@ -182,7 +237,7 @@
     onStepLevel: function(delta){ startAt(SessionModel.currentLevel() + delta); },
     onSwitchMode: switchMode,
     onRerollRandom: rerollRandom,
-    onLayoutChange: recalculateSessionLayout
+    onLayoutChange: animateSessionLayoutChange
   });
 
   window.UI.TrainingSession = {

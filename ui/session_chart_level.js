@@ -15,6 +15,7 @@
   var chartTypeOptions = document.getElementById("chartTypeOptions");
   var chartTypeCurrentMode = document.getElementById("chartTypeCurrentMode");
   var chartTypeWidget = chartTypeToggle.closest(".level-block");
+  var chartTypeHeadings = chartTypeWidget.querySelector(".mode-headings");
   var levelNumberEl = document.getElementById("levelNumber");
   var levelBurstEl = document.getElementById("levelBurst");
   var levelDownBtn = document.getElementById("levelDownBtn");
@@ -87,8 +88,8 @@
     var modeLabels = {
       singles: "Singles",
       doubles: "Doubles",
-      random: "Random, single or double",
-      climb: "Both, singles and doubles"
+      random: "Random type",
+      climb: "Singles and doubles"
     };
     modeSinglesBtn.classList.toggle("is-active", mode === "singles");
     modeDoublesBtn.classList.toggle("is-active", mode === "doubles");
@@ -213,9 +214,49 @@
   function init(hooks){
     chartTypeToggle.addEventListener("click", function(){
       var isExpanded = chartTypeToggle.getAttribute("aria-expanded") === "true";
-      setChartTypeSelectorExpanded(!isExpanded);
-      LevelModel.saveChartTypeSelectorExpanded(!isExpanded);
-      window.requestAnimationFrame(hooks.onLayoutChange);
+      var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      function applyToggle(){
+        hooks.onLayoutChange(function(){
+          setChartTypeSelectorExpanded(!isExpanded);
+          LevelModel.saveChartTypeSelectorExpanded(!isExpanded);
+        });
+      }
+
+      if (reducedMotion){
+        applyToggle();
+        return;
+      }
+
+      chartTypeToggle.disabled = true;
+      var outgoing = isExpanded ?
+        [chartTypeHeadings, chartTypeOptions] :
+        [chartTypeCurrentMode];
+      var incoming = isExpanded ?
+        [chartTypeCurrentMode] :
+        [chartTypeHeadings, chartTypeOptions];
+
+      Promise.all(outgoing.map(function(element){
+        var animation = element.animate([{ opacity: 1 }, { opacity: 0 }], {
+          duration: 160,
+          easing: "ease-in"
+        });
+        return animation.finished.then(function(){ animation.cancel(); });
+      })).then(function(){
+        applyToggle();
+        return Promise.all(incoming.map(function(element){
+          var animation = element.animate([{ opacity: 0 }, { opacity: 1 }], {
+            duration: 200,
+            easing: "ease-out"
+          });
+          return animation.finished.then(function(){ animation.cancel(); });
+        }));
+      }).then(function(){
+        chartTypeToggle.disabled = false;
+      }).catch(function(error){
+        chartTypeToggle.disabled = false;
+        throw error;
+      });
     });
 
     levelDownBtn.addEventListener("click", function(){
