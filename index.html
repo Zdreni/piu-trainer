@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="level-controller.css?v=147">
+<link rel="stylesheet" href="level-controller.css?v=148">
 </head>
 <body>
 
@@ -57,26 +57,34 @@
       <button class="level-nav-btn level-nav-right" id="levelUpBtn" title="Increase level" aria-label="Increase level">&#43;</button>
 
       <div class="level-block">
-        <div class="eyebrow">Chart</div>
+        <div class="mode-headings">
+          <div class="mode-heading">Select type</div>
+          <div class="mode-heading mode-heading-separator">- or -</div>
+          <div class="mode-heading">Auto select</div>
+        </div>
         <div class="mode-row">
           <div class="mode-group">
             <button type="button" class="mode-btn has-subtitle" id="modeSinglesBtn">
               Singles
-              <span class="mode-btn-subtitle" id="singlesLevelSubtitle">Level --</span>
             </button>
             <button type="button" class="mode-btn has-subtitle" id="modeDoublesBtn">
               Doubles
-              <span class="mode-btn-subtitle" id="doublesLevelSubtitle">Level --</span>
             </button>
           </div>
-          <button type="button" class="mode-btn has-subtitle" id="modeRandomBtn">
-            Random
-            <span class="mode-btn-subtitle">single OR double<br>per level</span>
-          </button>
-          <button type="button" class="mode-btn has-subtitle" id="modeClimbBtn">
-            Both
-            <span class="mode-btn-subtitle">single AND double<br>per level</span>
-          </button>
+          <div class="mode-group">
+            <button type="button" class="mode-btn has-subtitle" id="modeRandomBtn">
+              <span class="mode-btn-label">Random</span>
+              <span class="mode-btn-ball mode-btn-ball-random" aria-hidden="true">?</span>
+            </button>
+            <button type="button" class="mode-btn has-subtitle" id="modeClimbBtn">
+              <span class="mode-btn-label">Both</span>
+              <span class="mode-btn-ball-pair" aria-hidden="true">
+                <span class="mode-btn-ball mode-btn-ball-single">S</span>
+                <span class="mode-btn-ball-plus">+</span>
+                <span class="mode-btn-ball mode-btn-ball-double">D</span>
+              </span>
+            </button>
+          </div>
         </div>
         <div class="number-wrap">
           <div class="burst pink" id="levelBurst"></div>
@@ -157,7 +165,7 @@
   <script src="ui/tools.js?v=13"></script>
   <script src="ui/svg.js?v=1"></script>
   <script src="ui/session_tries_history.js?v=16"></script>
-  <script src="ui/session_chart_level.js?v=8"></script>
+  <script src="ui/session_chart_level.js?v=9"></script>
   <script src="ui/session_try_score_target.js?v=5"></script>
   <script src="ui/session_screen.js?v=48"></script>
   <script src="ui/session_finish_confirmation.js?v=3"></script>

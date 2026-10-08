@@ -11,8 +11,6 @@
   var modeDoublesBtn = document.getElementById("modeDoublesBtn");
   var modeRandomBtn = document.getElementById("modeRandomBtn");
   var modeClimbBtn = document.getElementById("modeClimbBtn");
-  var singlesLevelSubtitle = document.getElementById("singlesLevelSubtitle");
-  var doublesLevelSubtitle = document.getElementById("doublesLevelSubtitle");
   var levelNumberEl = document.getElementById("levelNumber");
   var levelBurstEl = document.getElementById("levelBurst");
   var levelDownBtn = document.getElementById("levelDownBtn");
@@ -54,6 +52,19 @@
     levelUpBtn.classList.toggle("is-disabled", !canStep(1));
   }
 
+  function ensureModeBall(button, level, isDoubles){
+    var ball = button.querySelector(".level-ball--mode");
+    if (!ball){
+      ball = UiTools.buildLevelBall(isDoubles ? "Double" : "Single", String(level), isDoubles, "level-ball--mode");
+      button.appendChild(ball);
+    }
+    ball.classList.toggle("type-doubles", isDoubles);
+    var typeEl = ball.querySelector(".level-ball-type");
+    var valueEl = ball.querySelector(".level-ball-value");
+    typeEl.textContent = isDoubles ? "Double" : "Single";
+    valueEl.textContent = String(level);
+  }
+
   function updateModeButtons(){
     var mode = SessionModel.getMode();
     var levels = SessionModel.getSnapshot().levels;
@@ -61,8 +72,8 @@
     modeDoublesBtn.classList.toggle("is-active", mode === "doubles");
     modeRandomBtn.classList.toggle("is-active", mode === "random");
     modeClimbBtn.classList.toggle("is-active", mode === "climb");
-    singlesLevelSubtitle.textContent = "Level " + levels.singles;
-    doublesLevelSubtitle.textContent = "Level " + levels.doubles;
+    ensureModeBall(modeSinglesBtn, levels.singles, false);
+    ensureModeBall(modeDoublesBtn, levels.doubles, true);
   }
 
   // Vertically centers the level +/- buttons on the level indicator (horizontal position
