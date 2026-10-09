@@ -89,7 +89,7 @@
       singles: "Singles",
       doubles: "Doubles",
       random: "Random type",
-      climb: "Singles and doubles"
+      climb: "Single/double climb"
     };
     modeSinglesBtn.classList.toggle("is-active", mode === "singles");
     modeDoublesBtn.classList.toggle("is-active", mode === "doubles");
