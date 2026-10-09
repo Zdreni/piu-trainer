@@ -128,6 +128,7 @@
       LevelModel.clearSessionState();
       return;
     }
+    LevelModel.savePreferredPlayMode(SessionModel.getMode());
     var payload = SessionModel.getSnapshot();
     payload.tries = SessionTriesHistory.getTries();
     LevelModel.saveSessionState(payload);
@@ -184,7 +185,7 @@
   // Begins a brand-new session at `level` for all three tracks (singles,
   // doubles, random), defaulting to random mode.
   function startSession(level){
-    SessionModel.startSession(level);
+    SessionModel.startSession(level, LevelModel.readPreferredPlayMode());
     render(true);
   }
 

@@ -284,6 +284,29 @@
     writeStoredBlob(blob);
   }
 
+  function isValidPlayMode(mode){
+    return mode === "singles" || mode === "doubles" || mode === "random" || mode === "climb";
+  }
+
+  function readPreferredPlayMode(){
+    var preferences = readStoredBlob().preferences;
+    if (!preferences || typeof preferences !== "object" || Array.isArray(preferences) ||
+        !isValidPlayMode(preferences.playMode)){
+      return "random";
+    }
+    return preferences.playMode;
+  }
+
+  function savePreferredPlayMode(mode){
+    if (!isValidPlayMode(mode)) return;
+    var blob = readStoredBlob();
+    if (!blob.preferences || typeof blob.preferences !== "object" || Array.isArray(blob.preferences)){
+      blob.preferences = {};
+    }
+    blob.preferences.playMode = mode;
+    writeStoredBlob(blob);
+  }
+
   function clearPreferences(){
     var blob = readStoredBlob();
     delete blob.preferences;
@@ -534,6 +557,8 @@
     clearWarmupLevel: clearWarmupLevel,
     readChartTypeSelectorExpanded: readChartTypeSelectorExpanded,
     saveChartTypeSelectorExpanded: saveChartTypeSelectorExpanded,
+    readPreferredPlayMode: readPreferredPlayMode,
+    savePreferredPlayMode: savePreferredPlayMode,
     clearPreferences: clearPreferences,
     readSessionState: readSessionState,
     saveSessionState: saveSessionState,
@@ -665,12 +690,14 @@
   }
 
   // Begins a brand-new session at `level` for all tracks, defaulting to random mode.
-  function startSession(level){
+  function startSession(level, mode){
+    if (!isValidPlayMode(mode)) mode = "random";
     sessionState.levels = { singles: level, doubles: level, random: level };
-    sessionState.mode = "random";
-    sessionState.currentType = Math.random() < 0.5 ? "S" : "D";
+    sessionState.mode = mode;
+    sessionState.currentType = mode === "singles" ? "S" : mode === "doubles" ? "D" : (Math.random() < 0.5 ? "S" : "D");
     sessionState.attemptIndex = 0;
     sessionState.startedAt = new Date().toISOString();
+    if (mode === "climb") chooseClimbType();
   }
 
   // Clears all session state back to the setup screen's starting point.

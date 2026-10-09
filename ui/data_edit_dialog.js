@@ -32,7 +32,8 @@
       var activeRawData = LevelModel.getActiveRawData();
       if (activeRawData) settings.profile = activeRawData;
       settings.preferences = {
-        chartTypeSelectorExpanded: LevelModel.readChartTypeSelectorExpanded()
+        chartTypeSelectorExpanded: LevelModel.readChartTypeSelectorExpanded(),
+        playMode: LevelModel.readPreferredPlayMode()
       };
       return settings;
     }
@@ -173,8 +174,11 @@
 
       if (parsed.preferences !== undefined &&
           (!parsed.preferences || typeof parsed.preferences !== "object" || Array.isArray(parsed.preferences) ||
-           typeof parsed.preferences.chartTypeSelectorExpanded !== "boolean")){
-        dataModalError.textContent = "\"preferences.chartTypeSelectorExpanded\" must be a boolean.";
+           (parsed.preferences.chartTypeSelectorExpanded !== undefined && typeof parsed.preferences.chartTypeSelectorExpanded !== "boolean") ||
+           (parsed.preferences.playMode !== undefined &&
+            parsed.preferences.playMode !== "singles" && parsed.preferences.playMode !== "doubles" &&
+            parsed.preferences.playMode !== "random" && parsed.preferences.playMode !== "climb"))){
+        dataModalError.textContent = "\"preferences.chartTypeSelectorExpanded\" must be a boolean and \"preferences.playMode\" must be a valid play mode.";
         dataModalError.hidden = false;
         return;
       }
@@ -194,7 +198,13 @@
       }
 
       if (parsed.preferences !== undefined){
-        LevelModel.saveChartTypeSelectorExpanded(parsed.preferences.chartTypeSelectorExpanded);
+        LevelModel.clearPreferences();
+        if (parsed.preferences.chartTypeSelectorExpanded !== undefined){
+          LevelModel.saveChartTypeSelectorExpanded(parsed.preferences.chartTypeSelectorExpanded);
+        }
+        if (parsed.preferences.playMode !== undefined){
+          LevelModel.savePreferredPlayMode(parsed.preferences.playMode);
+        }
       } else {
         LevelModel.clearPreferences();
       }
